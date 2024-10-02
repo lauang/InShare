@@ -155,7 +155,8 @@ inproper insertion of data.
  a) Locate an area of the code which could result in a SQL injection
     vulnerability.
 
- b) Test the presence of the SQL injection without harming the data.
+ b) Test the presence of the SQL injection without harming the data
+    or violating the users' privacy by exposing private data.
 
  c) Devise an exploit which uses SQL injection to read all the
     notes on the server. To demonstrate it on the sample database,
@@ -171,11 +172,12 @@ inproper insertion of data.
 Cross Site Scripting (XSS) is a class of vulnerabilities where data
 is confused for JavaScript when it is inserted into HTML pages.
 
- a) Locate an area of the code which could result in a SQL injection.
+ a) Locate an area of the code which could result in a XSS vulnerability.
     *Hint: The XSS vulnerability in InShare does not arise from an explicit
     string concatenation in the Java source code.*
 
- b) Test the presence of the XSS without harming the data or its users.
+ b) Test the presence of the XSS without harming the data or violating
+    the user' privacy by exposing private data.
 
  c) Device a specific XSS which allows one a user to create a note
     which is authored by another user. To demonstrate this exploit:

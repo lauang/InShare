@@ -113,6 +113,8 @@ public final class Note {
                        , this.userPermissions);
     }
 
+
+
     /**
      * Returns a new Note with the updated user permissions.
      *
@@ -127,7 +129,22 @@ public final class Note {
                        , this.content
                        , userPermissions);
     }
-
+    /**
+     * Returns a new Note with the updated user permissions.
+     *
+     * @param user The user to whom the permission is being modified.
+     * @param permission The permission to be set for this user.
+     * @return A new Note instance with the updated permissions for the user.
+     */
+    public Note withUserPermissions(User user, Set<Permission> permissions) {
+        return new Note(this.id
+                       , this.author
+                       , this.name
+                       , this.created
+                       , this.content
+                       , userPermissions.put(user.id,permissions));
+    }
+    
     /**
      * Returns a new Note with an additional permission for the specified user.
      *

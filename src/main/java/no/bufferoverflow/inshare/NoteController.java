@@ -216,6 +216,7 @@ public class NoteController {
             throw new UsernameNotFoundException("User not found: " + username);
         }
 
+        note = note.withUserPermissions(user,HashSet.of());
         // Add the permissions to the note
         for (Note.Permission permission : permissions)
             note = note.withUserPermission(user, permission);

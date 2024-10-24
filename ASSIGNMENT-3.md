@@ -172,7 +172,7 @@ When you are done, make sure that correct issues are closed.
 Here you can document your work.
 
 
-## SQL Injection Protection
+## SQL Injection Protection (2 pts)
 
 Short description of the issue.
 
@@ -194,7 +194,7 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 
 Link to merge request with review.
 
-## XSS Protection
+## XSS Protection (3 pts)
 
 Short description of the issue.
 
@@ -217,7 +217,7 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 Link to merge request with review.
 
 
-## CSRF Protection
+## CSRF Protection (2 pts)
 
 Short description of the issue.
 
@@ -239,7 +239,7 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 Link to merge request with review.
 
 
-## Authentication Improvement
+## Authentication Improvement (3 pts)
 
 Short description of the issue.
 
@@ -261,7 +261,7 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 Link to merge request with review.
 
 
-## Access Control Improvement
+## Access Control Improvement (4 pts)
 
 Give a short description of the access control vulnerabilities
 in InShare.
@@ -281,7 +281,7 @@ Link to commits which improve the access control system.
 
 Link to merge request with review.
 
-## Logging System Improvement
+## Logging System Improvement (1 pts)
 
 Give a short description of the principles behind security logging.
 

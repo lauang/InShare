@@ -287,6 +287,18 @@ For the first iteration, anyone with "WRITE" permission can share.
 Describe any challenges you faced in the implementation.
 Link to commits which improve the access control system.
 
+**1st iteration (sharing is limited to write access)**
+__done:__
+
+- share button removed from from users who does not have write access
+- Permissionchecks for all backend notecontroller actions
+- in share method only approved permissions will now be appended to user-note-permissions
+
+__TODO:__
+
+- edite shareform/sharenote.hmtl to only display the permissions the given user is allowed to share.
+- Look into 2nd iteration, restructure AC model
+
 ### Review
 
 Link to merge request with review.

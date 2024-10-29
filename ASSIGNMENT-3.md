@@ -271,6 +271,11 @@ https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/2
 Describe any challenges you faced in the implementation.
 Link to commits which are part of the fix.
 
+**Enable csrf tokens globally in `SecurityConfig.java`**
+CSRF tokens are enabled by default unless otherwise is specified. To solve this issue i removed the line which disables the csrf in `SecurityConfig.java`.
+
+
+
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.

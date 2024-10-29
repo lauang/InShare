@@ -20,7 +20,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Adjust as needed
+                //.csrf() // Adjust as needed
                 .authorizeHttpRequests(authz -> authz
                                 .requestMatchers("/register","register.html","/public","/style.css","/").permitAll() // Public access to static resources and registration
                                 .anyRequest().authenticated() // All other requests require authentication

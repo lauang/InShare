@@ -274,7 +274,7 @@ Link to commits which are part of the fix.
 **Enable csrf tokens globally in `SecurityConfig.java`**
 CSRF tokens are enabled by default unless otherwise is specified. To solve this issue i removed the line which disables the csrf in `SecurityConfig.java`.
 
-
+**implement csrf tokens for all requests**
 
 ### Review
 

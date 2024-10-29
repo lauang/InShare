@@ -230,11 +230,17 @@ public class NoteController {
 
         // Load the note
         Note note = Note.load(jdbcTemplate, noteId);
-
+        
         // Load the user
         User user = (User)userDetailService.loadUserByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException("User not found: " + username);
+        }
+        //the issuer
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User issuer = (User) authentication.getPrincipal();
+        if (user.id.equals(issuer.id)) {
+            return "redirect:/";
         }
 
         // Load the permissions of the authenticated user

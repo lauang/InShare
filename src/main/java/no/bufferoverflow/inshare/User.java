@@ -104,14 +104,15 @@ public final class User implements UserDetails, Comparable<User> {
      * @param jdbcTemplate the {@link JdbcTemplate} used to interact with the database.
      * @return a {@link Set} of {@link Note} objects that this user can read.
      */
-    public Set<Note> loadReadableNotes(JdbcTemplate jdbcTemplate) {
+    public Set<Note> loadReadableNotes(JdbcTemplate jdbcTemplate, String username) {
         final String sql = """
             SELECT n.id, n.name, n.created, n.content, u.username, a.id AS author_id, a.username AS author_username, a.password AS author_password
             FROM Note n
             JOIN NoteUserPermission nup ON n.id = nup.note
             JOIN User u ON nup.user = u.id
             JOIN User a ON n.author = a.id
-            WHERE u.username = '""" + username + "' AND nup.permission = 'READ'";
+            WHERE u.username = ? AND nup.permission = 'READ'
+            """;
 
         return io.vavr.collection.HashSet.ofAll(jdbcTemplate.query(sql, (rs, rowNum) -> 
             new Note(
@@ -125,7 +126,7 @@ public final class User implements UserDetails, Comparable<User> {
                 Instant.parse(rs.getString("created")),
                 rs.getString("content"),
                 Note.loadPermissions(jdbcTemplate, UUID.fromString(rs.getString("id")))
-            )
+            ), username
         ));
     }
 

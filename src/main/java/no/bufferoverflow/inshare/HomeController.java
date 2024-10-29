@@ -42,7 +42,7 @@ public class HomeController {
                 // Return private homepage template if user is authenticated
 
                 // Load notes that the user has read access to
-                Set<Note> readableNotes = user.loadReadableNotes(jdbcTemplate);
+                Set<Note> readableNotes = user.loadReadableNotes(jdbcTemplate, user.getUsername());
                 model.addAttribute("notes"
                                   ,readableNotes
                                       .toSortedSet(Note.byCreationDate.reversed()));

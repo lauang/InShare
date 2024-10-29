@@ -51,9 +51,14 @@ public class NoteController {
     public String showViewForm(@PathVariable("id") UUID id, Model model) {
         Note note = Note.load(jdbcTemplate, id);
         model.addAttribute("note", note);
-        return "viewNote";
-    }
 
+        if (checkPermission(id, Permission.READ)) {
+            return "viewNote"; // Check if user has read permission before displaying note
+        } else {
+            return "redirect:/"; // Redirect to dashboard if user does not have read permission
+        }
+    }
+    
     /**
      * Displays the form to edit an existing note.
      *
@@ -65,7 +70,11 @@ public class NoteController {
     public String showEditForm(@PathVariable("id") UUID id, Model model) {
         Note note = Note.load(jdbcTemplate, id);
         model.addAttribute("note", note);
-        return "editNote";
+        if (checkPermission(id, Permission.WRITE)) { // Check if user has write permission before displaying edit form
+            return "editNote";
+        } else { // Redirect to dashboard if user does not have write permission
+            return "redirect:/"; 
+        }
     }
 
     /**
@@ -85,7 +94,8 @@ public class NoteController {
         Note note = Note.load(jdbcTemplate, id)
                         .withName(name)
                         .withContent(content);
-        note.save(jdbcTemplate);
+
+        if (checkPermission(id, Permission.WRITE)) note.save(jdbcTemplate); // Check if user has write permission before saving changes
         return "redirect:/"; // Redirect to dashboard after update
     }
 
@@ -134,22 +144,27 @@ public class NoteController {
      */
     @GetMapping("/delete/{id}")
     @Transactional
-    public String deleteNote(@PathVariable("id") UUID id) {
-        final Authentication authentication
-            = SecurityContextHolder.getContext()
-                                   .getAuthentication();
+    public String deleteNote(@PathVariable("id") UUID id) { //can be shortened with check permission method
+        // final Authentication authentication
+        //     = SecurityContextHolder.getContext()
+        //                            .getAuthentication();
 
-        if ( authentication != null
-                && authentication.isAuthenticated()
-                && (authentication.getPrincipal() instanceof User)) {
-            final User user = (User)authentication.getPrincipal();
-            Note note = Note.load(jdbcTemplate, id);
+        // if ( authentication != null
+        //         && authentication.isAuthenticated()
+        //         && (authentication.getPrincipal() instanceof User)) {
+        //     final User user = (User)authentication.getPrincipal();
+        //     Note note = Note.load(jdbcTemplate, id);
 
-            if    (note.userPermissions.get(user.id).isDefined() 
-                && note.userPermissions.get(user.id).get().contains(Permission.DELETE)) {
-                final String deleteNote = "DELETE FROM Note WHERE id = ?";
-                jdbcTemplate.update(deleteNote, note.id.toString());
-            }
+        //     if    (note.userPermissions.get(user.id).isDefined() 
+        //         && note.userPermissions.get(user.id).get().contains(Permission.DELETE)) {
+        //         final String deleteNote = "DELETE FROM Note WHERE id = ?";
+        //         jdbcTemplate.update(deleteNote, note.id.toString());
+        //     }
+        // }
+        // return "redirect:/";
+        if (checkPermission(id, Permission.DELETE)) {
+            final String deleteNote = "DELETE FROM Note WHERE id = ?";
+            jdbcTemplate.update(deleteNote, id.toString());
         }
         return "redirect:/";
     }
@@ -167,8 +182,12 @@ public class NoteController {
         Note note = Note.load(jdbcTemplate, id);
     
         model.addAttribute("note", note);
-     
-        return "shareNote";
+        
+        if (checkPermission(id, Permission.WRITE)) {
+            return "shareNote";
+        } else {
+            return "redirect:/"; // Redirect to dashboard if user does not have write permission
+        }
     }
 
     /**
@@ -219,15 +238,18 @@ public class NoteController {
         }
 
         // Load the permissions of the authenticated user
-        Set<Permission> issuerPermissions = getIssuersPermissions(noteId);
+        //Set<Permission> issuerPermissions = getIssuersPermissions(noteId);
 
         note = note.withUserPermissions(user,HashSet.of());
         // Add the permissions to the note
         for (Note.Permission permission : permissions)
-            if (issuerPermissions.contains(permission)) note = note.withUserPermission(user, permission);
+            if (checkPermission(noteId, permission)) note = note.withUserPermission(user, permission);
+            //if (issuerPermissions.contains(permission)) note = note.withUserPermission(user, permission);
 
         // Save the note with updated permissions
-        note.save(jdbcTemplate);
+        if (checkPermission(noteId, Permission.WRITE)) {
+            note.save(jdbcTemplate);
+        }
         return "redirect:/";
     }
 
@@ -239,5 +261,21 @@ public class NoteController {
         return note.userPermissions
                  .get(user.id)
                  .getOrElse(HashSet.of());
+    }
+
+    private boolean checkPermission(UUID noteId, Permission permission) {
+        final Authentication authentication
+            = SecurityContextHolder.getContext()
+                                   .getAuthentication();
+
+        if ( authentication != null
+                && authentication.isAuthenticated()
+                && (authentication.getPrincipal() instanceof User)) {
+            final User user = (User)authentication.getPrincipal();
+            Note note = Note.load(jdbcTemplate, noteId);
+            return note.userPermissions.get(user.id).isDefined() 
+                && note.userPermissions.get(user.id).get().contains(permission);
+
+        } else return false;
     }
 }

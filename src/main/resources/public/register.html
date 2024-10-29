@@ -22,14 +22,14 @@
             const username = formData.get('username');
             const password = formData.get('password');
 
-            // Validate the username 
+            // Validate the username to contain only letters, numbers, and underscores
             const usernameIsValid = /^[a-zA-Z0-9_]{6,}$/.test(username);
             if (!usernameIsValid) {
                 alert('Username must be at least 6 characters long and contain only letters, numbers, and underscores.');
                 return;
             }
 
-            // Validate the password
+            // Validate the password to contain at least 8 characters, one number, and one special character
             const passwordIsValid = password.length >= 8 
                 && /[0-9]/.test(password)
                 && /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);

@@ -270,15 +270,34 @@ in InShare.
 
 **Identifying the issues**
 
-For simplicity we choose to stick with the current acces control model. This model uses an access control list, and discreationary access control. The "owner" decides who should have access to their resources. Currently any user with "READ" permission is considered an owner to some degree, this should be changed (need "WRITE" permission to share or introduce "SHARE" permission). Some permission checks are currently done at the frontend, these should be moved to backend. Another issue is that users can share notes with themselves and manipulate their rights. The application also has insecure direct object references, this issue relates to permission checks at the frontend instead of backend.
+The current access control model uses a discreationary (to some degree) access control model, the author delegates who should have access to their resources. After the note is shared, any whom has now access to the note can share it further. This is flawed. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is related to the lack of backend permission checks.
 
-For the first iteration, anyone with "WRITE" permission can share.
+**presented solutions**
+Iteration 1: limit sharing to those with write access, perform backend permission checks.
+Iteration 2: introduce Role based access control, fix flawed UI.
 
-**Issues**
+**Issues IT1**
 
 - Limit share access to users with WRITE access
 - Ensure permission checks are handled at backend
-- Ensure users cannot share rights they don't have themself
+
+
+**RBAC (from assignment notes)**
+Plan for the creation of a Role Based Access Control (RBAC) for InShare:
+
+Include a new database schema for the roles and permissions. Remember to set up foreign keys, and add additional constraints where suitable.
+The roles should be:
+
+- "owner": Each note has a unique owner. Has read/write/delete permissions. Cannot be revoked, only transferred by the owner themselves.
+- "administrator": Has read/write/delete permissions. Can set roles (except owner).
+- "editor": Has read/write permissions.
+- "reader": Can only read the note.
+
+Plan which methods on the backend have to include checks for permssions, and how this will be coordinated with the UI.
+Change the UI so that the sharing mechanism uses the new roles. Include an option to transfer ownership of a note.
+How will you determine that the security of the access control mechanism has improved?
+
+
 
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/9)
 

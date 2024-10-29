@@ -268,9 +268,19 @@ in InShare.
 
 ### Planning
 
-Describe your design for a role based access control system for InShare.
+**Identifying the issues**
 
-Link to issue(s) created.
+For simplicity we choose to stick with the current acces control model. This model uses an access control list, and discreationary access control. The "owner" decides who should have access to their resources. Currently any user with "READ" permission is considered an owner to some degree, this should be changed (need "WRITE" permission to share or introduce "SHARE" permission). Some permission checks are currently done at the frontend, these should be moved to backend. Another issue is that users can share notes with themselves and manipulate their rights. The application also has insecure direct object references, this issue relates to permission checks at the frontend instead of backend.
+
+For the first iteration, anyone with "WRITE" permission can share.
+
+**Issues**
+
+- Limit share access to users with WRITE access
+- Ensure permission checks are handled at backend
+- Ensure users cannot share rights they don't have themself
+
+[Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/9)
 
 ### Implementation
 

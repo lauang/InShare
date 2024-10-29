@@ -272,9 +272,10 @@ Describe any challenges you faced in the implementation.
 Link to commits which are part of the fix.
 
 **Enable csrf tokens globally in `SecurityConfig.java`**
-CSRF tokens are enabled by default unless otherwise is specified. To solve this issue i removed the line which disables the csrf in `SecurityConfig.java`.
+CSRF tokens are enabled by default unless otherwise is specified. To solve this issue i removed the line which disables the csrf in `SecurityConfig.java`. This step is connected to 'implement csrf tokens for all requests'.
 
 **implement csrf tokens for all requests**
+When enabling the token, this token is automatically handled with all thymeleaf request. The registration form however, does not use thymeleaf and the token then creates and error. Here the tokens must be implemented manually.
 
 ### Review
 

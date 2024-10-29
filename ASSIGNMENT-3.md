@@ -246,7 +246,7 @@ Link to merge request with review.
 
 ## CSRF Protection (2 pts)
 
-Short description of the issue.
+The system contains __Cross Site Request Forgery__ vulnerabilities due to missing protection in the form of absent tokens and a "relaxed" approach to flags on cookies. Without proper csrf protection, attackers can exploit a user's session to perform malicious actions.
 
 ### Planning
 

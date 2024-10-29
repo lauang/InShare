@@ -131,7 +131,7 @@
                         th:data-note="${note.id}"
                         th:data-action="edit">Edit</div>
                 <div class="menu-item" 
-                        th:if="${note.userPermissions.get(userid).getOrElse(emptyset).contains(write)}"
+                        th:if="${note.userPermissions.get(userid).getOrElse(emptyset).contains(write)}" 
                         th:data-note="${note.id}" 
                         th:data-action="share">Share</div>
                 <div class="menu-item"

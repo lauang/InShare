@@ -165,7 +165,9 @@ public class NoteController {
     @GetMapping("/share/{id}")
     public String showShareForm(@PathVariable("id") UUID id, Model model) {
         Note note = Note.load(jdbcTemplate, id);
+    
         model.addAttribute("note", note);
+     
         return "shareNote";
     }
 
@@ -216,13 +218,26 @@ public class NoteController {
             throw new UsernameNotFoundException("User not found: " + username);
         }
 
+        // Load the permissions of the authenticated user
+        Set<Permission> issuerPermissions = getIssuersPermissions(noteId);
+
         note = note.withUserPermissions(user,HashSet.of());
         // Add the permissions to the note
         for (Note.Permission permission : permissions)
-            note = note.withUserPermission(user, permission);
+            if (issuerPermissions.contains(permission)) note = note.withUserPermission(user, permission);
 
         // Save the note with updated permissions
         note.save(jdbcTemplate);
         return "redirect:/";
+    }
+
+    private Set<Permission> getIssuersPermissions(UUID noteId) {
+        Note note = Note.load(jdbcTemplate, noteId);
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        return note.userPermissions
+                 .get(user.id)
+                 .getOrElse(HashSet.of());
     }
 }

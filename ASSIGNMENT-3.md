@@ -250,9 +250,21 @@ Short description of the issue.
 
 ### Planning
 
-Describe your plan to implement CSRF protection here.
+**Identifying the issues**
 
-Link to issue(s) created.
+There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implenented on requests. We know actions check for authentication but this can be exploited on from an external site. Some of the requests use GET requests, this i not wrong but POST requests are generally safer with respect to csrf. Inspecting cookies reveals the httponly flag is enabled, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+
+**Issue summary**
+
+- Enable csrf tokens globally in `SecurityConfig.java`
+- Explore possibility of converting GET requests to POST requests
+- implement csrf tokens for all requests.
+- Change samesite flag to "strict"
+- Explore possibility for TLS and HTTPS -> secure flag "true"
+
+**CSRF issue (individual steps are split to child items):**
+
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/2 
 
 ### Implementation
 

@@ -50,6 +50,11 @@ public class HomeController {
                 model.addAttribute("read", Note.Permission.READ);
                 model.addAttribute("write", Note.Permission.WRITE);
                 model.addAttribute("delete", Note.Permission.DELETE);
+                
+                model.addAttribute("owner", Note.Role.OWNER);
+                model.addAttribute("editor", Note.Role.EDITOR);
+                model.addAttribute("admin", Note.Role.ADMINISTRATOR);
+                model.addAttribute("reader", Note.Role.READER);
 
                 return "dashboard";
         }

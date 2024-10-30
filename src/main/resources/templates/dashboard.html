@@ -126,16 +126,24 @@
             <div th:each="note : ${notes}" class="menu" th:id="'menu-' + ${note.id}" onclick="handleMenuClick(event)">
                 <div class="menu-info"><p th:text="'Created: ' + ${#dates.format(note.created, 'dd MMM yyyy, HH:mm')}"></p></div>
                 <div class="menu-info"><p th:text="'Author: ' + ${note.author.username}"></p></div>
+                <div class="menu-info"><p th:text="'Role: ' + ${note.userRoles.get(userid).getOrElse('No Role').toString().toLowerCase()}"></p></div>
                 <div class="menu-item"
-                        th:if="${note.userPermissions.get(userid).getOrElse(emptyset).contains(write)}"
+                        th:if="${
+                            note.userRoles.get(userid).contains(owner) ||
+                            note.userRoles.get(userid).contains(admin) ||
+                            note.userRoles.get(userid).contains(editor)}"
                         th:data-note="${note.id}"
                         th:data-action="edit">Edit</div>
                 <div class="menu-item" 
-                        th:if="${note.userPermissions.get(userid).getOrElse(emptyset).contains(write)}" 
+                        th:if="${
+                            note.userRoles.get(userid).contains(owner) ||
+                            note.userRoles.get(userid).contains(admin)}"
                         th:data-note="${note.id}" 
                         th:data-action="share">Share</div>
                 <div class="menu-item"
-                        th:if="${note.userPermissions.get(userid).getOrElse(emptyset).contains(delete)}"
+                        th:if="${
+                            note.userRoles.get(userid).contains(owner) ||
+                            note.userRoles.get(userid).contains(admin)}"
                         th:data-note="${note.id}"
                         th:data-action="delete">Delete</div>
             </div>

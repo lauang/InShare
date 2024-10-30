@@ -313,10 +313,15 @@ __done:__
 - Permissionchecks for all backend notecontroller actions
 - in share method only approved permissions will now be appended to user-note-permissions
 
-__TODO:__
+**RBAC model**
+- Impl. RBAC in DB -> `SQLiteConfig.java`. 
+- remove old structure in DB -> `SQLiteConfig.java`.
+- update UI
+- update backend to adapt to new roles.
+- enforce backend permission checks on all actions
 
-- edite shareform/sharenote.hmtl to only display the permissions the given user is allowed to share.
-- Look into 2nd iteration, restructure AC model
+**implications**
+- the sample db is not compatible with the new stucture
 
 ### Review
 

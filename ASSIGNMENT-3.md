@@ -176,11 +176,19 @@ Here you can document your work.
 
 Short description of the issue.
 
+One potential area for SQL-injection is in methods where SQL queries are constructed dynamically using string concatenation, such as the User.loadReadableNotes method. In this method, the username is directly concatenated into the SQL query without using parameterized queries, making it vulnerable to SQL injection.
+
 ### Planning
 
 Explain the mititgation techiniques for SQL injection which are planning to apply.
 
-Link to issue(s) created.
+* Parameterized queries: This is the most effective way to prevent SQL injection. By using parameterized queries, we separate SQL code from user input, ensuring that input is treated strictly as data and cannot alter the structure of the query.
+
+* Input validation and sanitization: Properly validating user inputs helps reduce SQL injection risk. By validating data types, lengths, and formats can stop some simple attacks. For example, if we expect a input just containing characters, we should enforce that only characters are allowed.
+
+* 
+
+Link to issue(s) created: https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/1 
 
 ### Implementation
 

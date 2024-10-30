@@ -477,11 +477,42 @@ Give a short description of the principles behind security logging.
 
 ### Planning
 
+**Identfying the issues**
+
+Currently in Inshare the only logging is in `Note.java` and `SQLiteConfig.java`. The loggers in the two classes log the events; 'enabling foreign key support', 'load note' and 'load roles'. It is not wrong to log these events, but they are not critical and should not be in focus when there is else where no logging.
+
+**What should be logged (based on slides)**
+
+- Authentication events
+  - Successful Logins: Log successful login events with the username, timestamp.
+  - Failed Login Attempts: Log failed attempts to detect potential brute-force attacks. Include details like username attempted and timestamp.
+  - Logout Events: Track when users log out, this provides a picture of session length.
+  - ?Session Token Generation and Expiration (might be relevant with respect to the CSRF task)
+- Attempted intrusions
+  - SQL Injection Attempts: If the system detects suspicious input patterns. log the input, user, and timestamp.
+  - Cross-Site Scripting (XSS) Attempts: Log any detected scripts. log input, user and timestamp.
+  - Unauthorized Access Attempts: Log instances caught at backend. Include the user’s role, attempted action, and target note ID.
+  - ?Suspicious API Access: Record attempts at request tampering.
+- Violations of invariants
+  - Data consistency violations: ex, editor tries to delete a note.
+- Unusual behaviour
+  - ?Abnormal frequency of notesharing.
+- Performance statistics
+  - Log loading times. 
+  - Log request latency.
+
+- Note Actions, log the type of action, user(s) involved, and the note.
+
+**All these logging events** should of course avoid violationg any form of user privacy or share sensitive data.
+
+
+
+
 Describe what events should be logged, and how you will implement this.
 
 What are you recommendations for log monitoring and response for InShare?
 
-Link to issue(s) created.
+[Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/29)
 
 ### Implementation
 

@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.stereotype.Component;
@@ -14,14 +13,13 @@ import org.springframework.stereotype.Component;
 @Component
 @Configuration
 public class SecurityConfig {
-    private final UserDetailsService userDetailsService;
-    public SecurityConfig(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new Argon2PasswordEncoder(16, 32, 1, 1 << 13, 2);
+    private final PasswordEncoder passwordEncoder;
+    private final UserDetailsService userDetailsService;
+
+    public SecurityConfig(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
@@ -38,6 +36,7 @@ public class SecurityConfig {
     }
     @Autowired
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService);
+        auth.userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
     }
 }

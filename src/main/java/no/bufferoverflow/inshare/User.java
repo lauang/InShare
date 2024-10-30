@@ -136,7 +136,7 @@ public final class User implements UserDetails, Comparable<User> {
      */
     @Override
     public String getPassword() {
-        return "{noop}" + password;
+        return "{argon2}" + password;
     }
 
     @Override

@@ -291,19 +291,79 @@ Link to merge request with review.
 
 ## Access Control Improvement (4 pts)
 
-Give a short description of the access control vulnerabilities
-in InShare.
+Inshare has a flawed Access control model which violate privacy and can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
 
 ### Planning
 
-Describe your design for a role based access control system for InShare.
+**Identifying the issues**
 
-Link to issue(s) created.
+The current access control model uses a discreationary (to some degree) access control model, the author delegates who should have access to their resources. After the note is shared, any whom has now access to the note can share it further. This is flawed. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is related to the lack of backend permission checks.
+
+**Solutions**
+Iteration 1: limit sharing to those with write access, perform backend permission checks.
+Iteration 2: introduce Role based access control, perform backend permission checks, fix flawed UI.
+
+**Issues IT1**
+
+- Limit share access to users with WRITE access
+- Ensure permission checks are handled at backend
+
+
+**RBAC (from assignment notes)**
+Plan for the creation of a Role Based Access Control (RBAC) for InShare:
+
+Include a new database schema for the roles and permissions. Remember to set up foreign keys, and add additional constraints where suitable.
+The roles should be:
+
+- "owner": Each note has a unique owner. Has read/write/delete permissions. Cannot be revoked, only transferred by the owner themselves.
+- "administrator": Has read/write/delete permissions. Can set roles (except owner).
+- "editor": Has read/write permissions.
+- "reader": Can only read the note.
+
+Plan which methods on the backend have to include checks for permssions, and how this will be coordinated with the UI.
+Change the UI so that the sharing mechanism uses the new roles. Include an option to transfer ownership of a note.
+How will you determine that the security of the access control mechanism has improved?
+
+[Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/9)
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 Link to commits which improve the access control system.
+
+**1st iteration (sharing is limited to write access)**
+__done:__
+
+- share button removed from from users who does not have write access
+- Permissionchecks for all backend notecontroller actions
+- in share method only approved permissions will now be appended to user-note-permissions
+
+**RBAC model**
+
+- Impl. RBAC in DB -> `SQLiteConfig.java`.
+- remove old structure in DB -> `SQLiteConfig.java`.
+- update UI
+- update backend to adapt to new roles.
+- enforce backend permission checks on all actions
+
+**implications**
+
+- the sample db is not compatible with the new stucture
+
+**Testing the security of AC model**
+
+- Run Zap
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys with sonarqube show no new security issues related to new code
+- User Tests
+  - Every backend note action uses permission checks
+  - Users can no longer share with themselves
+  - Only owner and admin can share
+  - Only owner can transfer ownership
+  - It is no longer possible to manually alter urls to gain unauthorized access
+  - UI: Only permissitted actions related to a user's role is displayed in the menus
+  - Creating new notes, store them in new db structure
 
 ### Review
 

@@ -2,6 +2,7 @@ package no.bufferoverflow.inshare;
 
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -108,8 +109,9 @@ public final class User implements UserDetails, Comparable<User> {
         final String sql = """
             SELECT n.id, n.name, n.created, n.content, u.username, a.id AS author_id, a.username AS author_username, a.password AS author_password
             FROM Note n
-            JOIN NoteUserPermission nup ON n.id = nup.note
-            JOIN User u ON nup.user = u.id
+            JOIN NoteUserRoles nur ON n.id = nur.note
+            JOIN RolePermissions rp ON nur.role = rp.role
+            JOIN User u ON nur.user = u.id
             JOIN User a ON n.author = a.id
             WHERE u.username = ? AND nup.permission = 'READ'
             """;
@@ -125,10 +127,12 @@ public final class User implements UserDetails, Comparable<User> {
                 rs.getString("name"),
                 Instant.parse(rs.getString("created")),
                 rs.getString("content"),
-                Note.loadPermissions(jdbcTemplate, UUID.fromString(rs.getString("id")))
+                Note.loadRoles(jdbcTemplate, UUID.fromString(rs.getString("id")))
             ), username
         ));
     }
+
+    
 
    /**
      * Returns the password for this user.

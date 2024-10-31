@@ -207,10 +207,9 @@ https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3/diffs?commit_id
 
 Describe the steps you have taken to ensure that the issue is really fixed.
 
-- Run Zap
-  - analisys with Zap show no new security alerts related to the new code
-- Run SonarQube
-  - Analisys with sonarqube show no new security issues related to new code.
+- Run Zap and SonarQube:
+  - In previous analisys with SonarQube, there has been a security warning related to string concatination. This issue is now resolved.
+  - Analisys with Zap and SonarQube shows no new security alerts related to the new implementation.
 - Automatic test:
   - Verify that UserTest.java passes.
   - This test checks that username is not concatinated direclty into the query. 

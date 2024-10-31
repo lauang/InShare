@@ -141,7 +141,7 @@ public class NoteController {
      * @param id the unique identifier of the note to be deleted.
      * @return a redirect to the dashboard after deletion.
      */
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     @Transactional
     public String deleteNote(@PathVariable("id") UUID id) { //can be shortened with check permission method
         if (checkPermission(id, Permission.DELETE)) {

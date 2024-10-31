@@ -104,7 +104,7 @@ public final class User implements UserDetails, Comparable<User> {
      * @param jdbcTemplate the {@link JdbcTemplate} used to interact with the database.
      * @return a {@link Set} of {@link Note} objects that this user can read.
      */
-    public Set<Note> loadReadableNotes(JdbcTemplate jdbcTemplate, String username) {
+    public Set<Note> loadReadableNotes(JdbcTemplate jdbcTemplate) {
         final String sql = """
             SELECT n.id, n.name, n.created, n.content, u.username, a.id AS author_id, a.username AS author_username, a.password AS author_password
             FROM Note n

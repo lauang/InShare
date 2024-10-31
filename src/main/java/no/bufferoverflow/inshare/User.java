@@ -114,7 +114,7 @@ public final class User implements UserDetails, Comparable<User> {
             JOIN User u ON nur.user = u.id
             JOIN User a ON n.author = a.id
             WHERE u.username = ? AND rp.permission = 'READ'
-        """;
+            """;
 
         return io.vavr.collection.HashSet.ofAll(jdbcTemplate.query(sql, (rs, rowNum) -> 
             new Note(

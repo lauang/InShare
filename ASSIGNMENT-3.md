@@ -257,14 +257,14 @@ There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityC
 **Issue summary**
 
 - Enable csrf tokens globally in `SecurityConfig.java`
-- Explore possibility of converting GET requests to POST requests
-- implement csrf tokens for all requests.
+- Explore possibility of converting GET requests to POST/DELETE requests
+- implement csrf tokens for requests.
 - Change samesite flag to "strict"
-- Explore possibility for TLS and HTTPS -> secure flag "true"
+- ?Explore possibility for TLS and HTTPS -> secure flag "true"
 
 **CSRF issue (individual steps are split to child items):**
 
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/2 
+[Link to issue(s)](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/2) 
 
 ### Implementation
 

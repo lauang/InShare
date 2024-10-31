@@ -1,6 +1,8 @@
 package no.bufferoverflow.inshare;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -143,14 +145,17 @@ public class NoteController {
      */
     @DeleteMapping("/delete/{id}")
     @Transactional
-    public String deleteNote(@PathVariable("id") UUID id) { //can be shortened with check permission method
+    public ResponseEntity<?> deleteNote(@PathVariable("id") UUID id) { //can be shortened with check permission method
         if (checkPermission(id, Permission.DELETE)) {
             final String deleteNote = "DELETE FROM Note WHERE id = ?";
             jdbcTemplate.update(deleteNote, id.toString());
-        }
-        return "redirect:/";
+            return ResponseEntity.ok().body("{\"message\": \"Note deleted successfully!\"}");
+        } else {
+            // Return forbidden status if user lacks permissions
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body("{\"error\": \"You do not have permission to delete this note.\"}");
+        }   
     }
-
 
     /**
      * Displays the form to share a note with another user.

@@ -22,7 +22,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf((csrf -> csrf
-                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).ignoringRequestMatchers("/register")
                 )) // Adjust as needed
                 .authorizeHttpRequests(authz -> authz
                                 .requestMatchers("/register","register.html","/public","/style.css","/").permitAll() // Public access to static resources and registration

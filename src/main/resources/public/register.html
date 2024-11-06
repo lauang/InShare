@@ -3,15 +3,10 @@
     <head>
         <title>Register for InShare</title>
         <link rel="stylesheet" href="/style.css">
-
-        <!-- CSRF Meta Tags for Fetch -->
-        <meta name="_csrf" th:content="${_csrf.token}" />
-        <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     </head>
 
 <body>
     <form id="registerForm" method="POST">
-        <input type="hidden" name="_csrf" th:value="${_csrf.token}" /> <!-- CSRF Token -->
         <input type="text" name="username" placeholder="Username" required />
         <input type="password" name="password" placeholder="Password" required />
         <button type="submit">Register</button>
@@ -31,17 +26,12 @@
             const data = new URLSearchParams();
             data.append('username', username);
             data.append('password', password);
-
-            //prepare csrf token
-            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
         
             // Perform the fetch request
             fetch('/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    [csrfHeader]: csrfToken  // Add CSRF token to headers
                 },
                 body: data
             })

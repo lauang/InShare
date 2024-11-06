@@ -225,6 +225,10 @@ https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3
 
 Short description of the issue.
 
+The main XSS vulnerability in InShare centers around the content of the notes. Since we allow HTML tas for text formatting, there's a risk that malicious scripts could be within the note conten, leading to cross-site scripting attacks. For example, as we saw in the last assignment, this script `<script>alert("XSS attack");</script>` as note content, would trigger an alert every time the user refreshes the page. 
+
+To address this, we need a solution that sanitizes the content of notes before they are displayed. Our approach is to use an HTML sanitizer, such as OWASP AntiSamy, which will strip out any potentially harmful tags or attributes while preserving the allowed HTML formatting.THis approach ensures that only safe and approved HTML tags are rendered, protecting against XSS vulnerabilities without removing the intended note formatting. 
+
 ### Planning
 
 Explain how you plan to mitigate the XSS vulnerability while keeping the formatting functionality.

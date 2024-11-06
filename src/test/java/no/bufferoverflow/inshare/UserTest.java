@@ -43,10 +43,11 @@ class UserTest {
             eq("""
                 SELECT n.id, n.name, n.created, n.content, u.username, a.id AS author_id, a.username AS author_username, a.password AS author_password
                 FROM Note n
-                JOIN NoteUserPermission nup ON n.id = nup.note
-                JOIN User u ON nup.user = u.id
+                JOIN NoteUserRoles nur ON n.id = nur.note
+                JOIN RolePermissions rp ON nur.role = rp.role
+                JOIN User u ON nur.user = u.id
                 JOIN User a ON n.author = a.id
-                WHERE u.username = ? AND nup.permission = 'READ'
+                WHERE u.username = ? AND rp.permission = 'READ'
                 """),
             any(RowMapper.class), // Cast the RowMapper to avoid the generic type warning
             eq("testuser") // Confirm that 'testuser' is passed as a parameter, not concatenated

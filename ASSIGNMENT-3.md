@@ -246,7 +246,11 @@ https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/21
 
 Describe any challenges you faced in the implementation.
 
+The only challange I faced during the implementation was figuring out how to handle the AntiSamy policy file without downloading it directly into the project. Using an `InputStream` solved the problem by allowing the policy file to be streamed at runtime, simplifying the implementation and minimizing the need for file management. 
+
 Link to commits which are part of the fix.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id=1743a1ec78cc576e2f850ac2a945a0ec1658a73b
+
 
 ### Review
 

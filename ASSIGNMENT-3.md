@@ -256,8 +256,17 @@ https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id
 
 Describe the steps you have taken to ensure that the issue is really fixed.
 
-Link to merge request with review.
+To ensure that the XSS vulnerability is effectively mitigated, I took the following steps:
 
+- Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
+- I manually tested inserting XSS scripts into note content to ensure that it doesn't execute. 
+- I have also manually tested that non-malicious note content are being preserved. 
+- I reviewed the AntiSamy Slashdot policy configuration to ensure it allows only safe tags and attributes for text formatting. 
+- To handle cases where the policy file might be missing, I included error handling in the `withContent` method. 
+
+
+Link to merge request with review.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6
 
 ## CSRF Protection (2 pts)
 

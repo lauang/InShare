@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,7 +26,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Adjust as needed
+                .csrf((csrf -> csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).ignoringRequestMatchers("/register")
+                )) // Adjust as needed
                 .authorizeHttpRequests(authz -> authz
                                 .requestMatchers("/register","register.html","/public","/style.css","/").permitAll() // Public access to static resources and registration
                                 .anyRequest().authenticated() // All other requests require authentication
@@ -34,6 +37,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+    
     @Autowired
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService)

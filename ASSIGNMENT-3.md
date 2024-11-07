@@ -176,65 +176,155 @@ Here you can document your work.
 
 Short description of the issue.
 
+One potential area for SQL-injection is in methods where SQL queries are constructed dynamically using string concatenation, such as the User.loadReadableNotes method. In this method, the username is directly concatenated into the SQL query without using parameterized queries, making it vulnerable to SQL injection.
+
 ### Planning
 
 Explain the mititgation techiniques for SQL injection which are planning to apply.
 
-Link to issue(s) created.
+* Parameterized queries: This is the most effective way to prevent SQL injection. By using parameterized queries, we separate SQL code from user input, ensuring that input is treated strictly as data and cannot alter the structure of the query.
+
+* Input validation and sanitization: Properly validating user inputs helps reduce SQL injection risk. By validating data types, lengths, and formats can stop some simple attacks. For example, we could restrict usernames to alphanumeric characters only to prevent special characters (such as quotes or semicolons) that could be used in an injection attempt. For example, we could enforce a regex pattern like ^[a-zA-Z0-9]+$ to validate that usernames contain only letters and numbers.
+
+* Least-privilege: The application database account should only have the necessary permissions for the required operations. For instance, if the account only needs read access for certain actions, we’ll restrict it from executing delete or update commands. This minimizes the risk if an SQL injection attempt is successful by limiting what the attacker could access or alter.
+
+Link to issue(s) created: 
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/1 
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 
-Link to commits which are part of the fix.
+We needed to fix the query in `User.loadReadableNotes`, and make username a parameterized variable instead of just concatinating it. To do this, we simply change the query from `WHERE u.username = '""" + username + "' AND nup.permission = 'READ'` into `WHERE u.username = ? AND nup.permission = 'READ'`, and let the return statement take in an extra argument `username`. 
+
+Input validation is handled in authentication, and least-privilege is handled in access control. 
+
+Link to commits which are part of the fix. 
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3/diffs?commit_id=c73762b0c07de56bbcf0fb5f2e4de7d6d15aa43d
+
 
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
 
+- Run Zap and SonarQube:
+  - In previous analisys with SonarQube, there has been a security warning related to string concatination. This issue is now resolved.
+  - Analisys with Zap and SonarQube shows no new security alerts related to the new implementation.
+- Automatic test:
+  - Verify that UserTest.java passes.
+  - This test checks that username is not concatinated direclty into the query. 
+- User tests:
+  - Checking that a username is not concatinated directly into the query. 
+    (e.g. create and login as user `‘ OR ‘1’=’1`, and check that the desktop doesn't view all notes in the database).
+  
+
 Link to merge request with review.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3
 
 ## XSS Protection (3 pts)
 
 Short description of the issue.
 
+The main XSS vulnerability in InShare centers around the content of the notes. Since we allow HTML tags for text formatting, there's a risk that malicious scripts could be within the note content, leading to cross-site scripting attacks. This can happen not only through direct input but also through request tampering, where an attacker manipulates requests to insert harmful scripts. For example, as we saw in the last assignment, a script like `<script>alert("XSS attack");</script>` in note content, would trigger an alert every time the user refreshes the page. 
+
+Although Quill editor provide some built-in sanitization on the frontend, this approach alone is not enough to secure the application. Just relying on frontend sanitization is risky because attackers can buypass it by sending manipulated requests to the backend.
+
+To address this, we need a solution that sanitizes the content of notes before they are displayed, in other words we need to sanitize in the backend. Our approach is to use an HTML sanitizer, such as OWASP AntiSamy, which will strip out any potentially harmful tags or attributes while preserving the allowed HTML formatting.This approach ensures that only safe and approved HTML tags are rendered, protecting against XSS vulnerabilities without removing the intended note formatting.
+
 ### Planning
 
 Explain how you plan to mitigate the XSS vulnerability while keeping the formatting functionality.
 
+To migate the XSS vulnerability whle preserving formatting functionality, I plan to intefrate OWASP AntiSamy into the cote content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags, and blocking any potential harmful scripts.
+
+First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `a`, `p`, `div`, `i`, `b`, `em`, `blockquote`, `tt`, `strong`, `br`, `ul`, `ol`, `li`.
+
+When a note is created or updated, AntiSamy will scan and clean the content, based on the policy file. This ensures that the output only contains safe HTML, free from any script or XSS risks. After sanitization, the clean content will be returned as the content os the note.
+
 Link to issue(s) created.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/21
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 
+The only challange I faced during the implementation was figuring out how to handle the AntiSamy policy file without downloading it directly into the project. Using an `InputStream` solved the problem by allowing the policy file to be streamed at runtime, simplifying the implementation and minimizing the need for file management. 
+
 Link to commits which are part of the fix.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id=1743a1ec78cc576e2f850ac2a945a0ec1658a73b
+
 
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
 
-Link to merge request with review.
+To ensure that the XSS vulnerability is effectively mitigated, I took the following steps:
 
+- Run ZAP
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys with SonarQube shows no new security alerts related to the new code
+User tests:
+  - Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
+  - I manually tested inserting XSS scripts (e.g. `<script>alert("XSS attack");</script>`) into note content to ensure that it doesn't execute. 
+  - I have also manually tested that non-malicious note content are being preserved. 
+  - I reviewed the AntiSamy Slashdot policy configuration to ensure it allows only safe tags and attributes for text formatting. 
+  - To handle cases where the policy file might be missing, I included error handling in the `withContent` method. 
+
+
+Link to merge request with review.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6
 
 ## CSRF Protection (2 pts)
 
-Short description of the issue.
+The system contains __Cross Site Request Forgery__ vulnerabilities due to missing protection in the form of absent tokens and a "relaxed" approach to flags on cookies. Without proper csrf protection, attackers can exploit a user's session to perform malicious actions.
 
 ### Planning
 
-Describe your plan to implement CSRF protection here.
+**Identifying the issues**
 
-Link to issue(s) created.
+There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implemented on requests. We know actions check for authentication but this can be exploited from an external site. Some of the requests use GET requests, this is not wrong but POST requests are generally safer with respect to csrf. Inspecting cookies reveals the httponly flag is enabled for the session token, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+
+**Issue summary**
+
+- Enable csrf tokens globally in `SecurityConfig.java`
+- Change action delete from a GET requet to a DELETE request.
+- implement csrf tokens for requests.
+
+**CSRF issue (individual steps are split to child items):**
+
+[Link to issue(s)](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/2) 
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 Link to commits which are part of the fix.
 
+I removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I faced was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests. I therefore changed this to a DELETE request and added the csrf token to the request.
+
+The GET request for edits could also be considered a vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit it manually and a POST request with the new content would be sent. This POST request would be stopped if it was a csrf.
+
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
+
+**Testing the security of AC model**
+
+- Run Zap
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys before fix:
+  "Make sure disabling Spring Security's CSRF protection is safe here." refering to csrf.disable().
+  - Analysis after fix:
+  This alert is now only related to the register page, which should be safe without a csrf token.
+- User Tests
+  - Created a link for deleting a note, the note is not deleted when the link is clicked
+  - Ensured normal functionality still works as expected
+    - register new users
+    - login
+    - sharing
+    - deleting (the correct way)
+    - editing
 
 Link to merge request with review.
 
@@ -300,19 +390,79 @@ Link to merge request with review.
 
 ## Access Control Improvement (4 pts)
 
-Give a short description of the access control vulnerabilities
-in InShare.
+Inshare has a flawed Access control model which violate privacy and can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
 
 ### Planning
 
-Describe your design for a role based access control system for InShare.
+**Identifying the issues**
 
-Link to issue(s) created.
+The current access control model uses a discreationary (to some degree) access control model, the author delegates who should have access to their resources. After the note is shared, any whom has now access to the note can share it further. This is flawed. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is related to the lack of backend permission checks.
+
+**Solutions**
+Iteration 1: limit sharing to those with write access, perform backend permission checks.
+Iteration 2: introduce Role based access control, perform backend permission checks, fix flawed UI.
+
+**Issues IT1**
+
+- Limit share access to users with WRITE access
+- Ensure permission checks are handled at backend
+
+
+**RBAC (from assignment notes)**
+Plan for the creation of a Role Based Access Control (RBAC) for InShare:
+
+Include a new database schema for the roles and permissions. Remember to set up foreign keys, and add additional constraints where suitable.
+The roles should be:
+
+- "owner": Each note has a unique owner. Has read/write/delete permissions. Cannot be revoked, only transferred by the owner themselves.
+- "administrator": Has read/write/delete permissions. Can set roles (except owner).
+- "editor": Has read/write permissions.
+- "reader": Can only read the note.
+
+Plan which methods on the backend have to include checks for permssions, and how this will be coordinated with the UI.
+Change the UI so that the sharing mechanism uses the new roles. Include an option to transfer ownership of a note.
+How will you determine that the security of the access control mechanism has improved?
+
+[Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/9)
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 Link to commits which improve the access control system.
+
+**1st iteration (sharing is limited to write access)**
+__done:__
+
+- share button removed from from users who does not have write access
+- Permissionchecks for all backend notecontroller actions
+- in share method only approved permissions will now be appended to user-note-permissions
+
+**RBAC model**
+
+- Impl. RBAC in DB -> `SQLiteConfig.java`.
+- remove old structure in DB -> `SQLiteConfig.java`.
+- update UI
+- update backend to adapt to new roles.
+- enforce backend permission checks on all actions
+
+**implications**
+
+- the sample db is not compatible with the new stucture
+
+**Testing the security of AC model**
+
+- Run Zap
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys with sonarqube show no new security issues related to new code
+- User Tests
+  - Every backend note action uses permission checks
+  - Users can no longer share with themselves
+  - Only owner and admin can share
+  - Only owner can transfer ownership
+  - It is no longer possible to manually alter urls to gain unauthorized access
+  - UI: Only permissitted actions related to a user's role is displayed in the menus
+  - Creating new notes, store them in new db structure
 
 ### Review
 

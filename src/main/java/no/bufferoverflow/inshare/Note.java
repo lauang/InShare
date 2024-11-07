@@ -14,6 +14,10 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.Comparator;
 
+import org.owasp.validator.html.*;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * Represents a Note in the InShare application.
  * A Note is defined by an ID, name, creation timestamp, content,
@@ -26,12 +30,13 @@ public final class Note {
     public final Instant created;
     public final String content;
     private static final Logger logger = LoggerFactory.getLogger(SQLiteConfig.class);
-        /**
-     * A map representing the permissions assigned to users.
-     * The key is the user ID, and the value is a set of permissions for
+
+    /**
+     * A map representing the roles assigned to users.
+     * The key is the user ID, and the value the role for
      * the user with that ID.
      */
-    public final Map<UUID, Set<Permission>> userPermissions;
+    public final Map<UUID, Role> userRoles;
 
 
     /**
@@ -53,6 +58,10 @@ public final class Note {
         READ, WRITE, DELETE
     }
 
+    public static enum Role {
+        OWNER, ADMINISTRATOR, EDITOR, READER
+    }
+
     /**
      * Constructor for Note which sets all its data.
      *
@@ -60,15 +69,15 @@ public final class Note {
      * @param name The name of the note.
      * @param created The timestamp when the note was created.
      * @param content The content of the note.
-     * @param userPermissions The map of user permissions for this note.
+     * @param userRoles The map of user roles for this note.
      */
-    public Note(UUID id, User author, String name, Instant created, String content, Map<UUID, Set<Permission>> userPermissions) {
+    public Note(UUID id, User author, String name, Instant created, String content, Map<UUID, Role> userRoles) {
         this.id = id;
         this.name = name;
         this.author = author;
         this.created = created;
         this.content = content;
-        this.userPermissions = userPermissions;
+        this.userRoles = userRoles;
     }
 
     /**
@@ -84,8 +93,7 @@ public final class Note {
             , name
             , Instant.now()
             , content
-            , HashMap.empty()
-            );
+            , HashMap.empty());
     }
 
     /**
@@ -94,8 +102,8 @@ public final class Note {
      * @param name The new name for the note.
      * @return A new Note instance with the updated name.
      */
-    public Note withName(String name) {
-        return new Note(this.id, this.author, name, this.created, this.content, this.userPermissions);
+    public Note withName(String name) { 
+        return new Note(this.id, this.author, name, this.created, this.content, this.userRoles);
     }
 
     /**
@@ -105,44 +113,41 @@ public final class Note {
      * @return A new Note instance with the updated content.
      */
     public Note withContent(String content) {
-        return new Note( this.id
-                       , this.author
-                       , this.name
-                       , this.created
-                       , content
-                       , this.userPermissions);
+        try (InputStream policyStream = getClass().getClassLoader().getResourceAsStream("antisamy-slashdot.xml")) {
+            if (policyStream == null) {
+                throw new IllegalArgumentException("Policy file not found.");
+            }
+            Policy policy = Policy.getInstance(policyStream);
+            AntiSamy antiSamy = new AntiSamy();
+            CleanResults cleanResults = antiSamy.scan(content, policy);
+            String sanitizedContent = cleanResults.getCleanHTML();
+
+            return new Note( this.id
+                           , this.author
+                           , this.name
+                           , this.created
+                           , sanitizedContent
+                           , this.userRoles);
+
+        } catch (PolicyException | ScanException | IOException e) {
+            logger.error("Error while sanitizing content: " + e.getMessage());
+            throw new RuntimeException("Failed to sanitize content", e);
+        }
     }
-
-
 
     /**
      * Returns a new Note with the updated user permissions.
      *
-     * @param userPermissions The new map of user permissions.
+     * @param userRoles The new map of user permissions.
      * @return A new Note instance with the updated user permissions.
      */
-    public Note withUserPermissions(Map<UUID, Set<Permission>> userPermissions) {
+    public Note withUserRoles(Map<UUID, Role> userRoles) {
         return new Note(this.id
                        , this.author
                        , this.name
                        , this.created
                        , this.content
-                       , userPermissions);
-    }
-    /**
-     * Returns a new Note with the updated user permissions.
-     *
-     * @param user The user to whom the permission is being modified.
-     * @param permission The permission to be set for this user.
-     * @return A new Note instance with the updated permissions for the user.
-     */
-    public Note withUserPermissions(User user, Set<Permission> permissions) {
-        return new Note(this.id
-                       , this.author
-                       , this.name
-                       , this.created
-                       , this.content
-                       , userPermissions.put(user.id,permissions));
+                       , userRoles);
     }
     
     /**
@@ -152,17 +157,14 @@ public final class Note {
      * @param permission The permission to be added.
      * @return A new Note instance with the updated permissions for the user.
      */
-    public Note withUserPermission(User user, Permission permission) {
-        final Set<Permission> oldperms
-            = userPermissions.get(user.id).getOrElse(HashSet.of());
-        final Set<Permission> newperms
-            = oldperms.add(permission);
+    public Note withUserRole(User user, Role role) {
+    
         return new Note( this.id
                        , this.author
                        , this.name
                        , this.created
                        , this.content
-                       , userPermissions.put(user.id,newperms));
+                       , userRoles.put(user.id, role));
     }
 
     /**
@@ -187,34 +189,34 @@ public final class Note {
             final String insertNote = "INSERT INTO Note (id, author, name, created, content) VALUES (?, ?, ?, ?, ?)";
             jdbcTemplate.update(insertNote, id.toString(), author.id, name, created.toString(), content);
         }
-        // Delete existing permissions for this note
-        final String deletePermissions = "DELETE FROM NoteUserPermission WHERE note = ?";
-        jdbcTemplate.update(deletePermissions, id.toString());
 
-        // Insert new permissions
-        final String insertPermission = "INSERT INTO NoteUserPermission (note, user, permission) VALUES (?, ?, ?)";
-        for (Tuple2<UUID, io.vavr.collection.Set<Permission>> entry : userPermissions) {
+        // Delete existing roles
+        final String deleteRoles = "DELETE FROM NoteUserRoles WHERE note = ?";
+        jdbcTemplate.update(deleteRoles, id.toString());
+
+        // Insert new roles
+        final String insertRole = "INSERT INTO NoteUserRoles (note, user, role) VALUES (?, ?, ?)";
+        for (Tuple2<UUID, Role> entry : userRoles) {
             UUID userid = entry._1;
-            io.vavr.collection.Set<Permission> permissions = entry._2;
-            for (Permission permission : permissions) {
-                jdbcTemplate.update(insertPermission, id.toString(), userid.toString(), permission.toString());
-            }
+            Role role = entry._2;
+            jdbcTemplate.update(insertRole, id.toString(), userid.toString(), role.toString());
+
         }
     }
 
     /**
      * Loads permissions for the specified note from the database.
-     *
      * @param jdbcTemplate The JdbcTemplate to interact with the database.
      * @param noteId The unique identifier of the note.
      * @return A map of user permissions for the note.
      */
     public static Map<UUID, Set<Permission>> loadPermissions(JdbcTemplate jdbcTemplate, UUID noteId) {
         final String sql = """
-                SELECT user, permission
-                FROM NoteUserPermission
-                WHERE note = ?
-                """;
+            SELECT nur.user, rp.permission
+            FROM NoteUserRoles nur
+            JOIN RolePermissions rp ON nur.role = rp.role
+            WHERE nur.note = ?
+        """; 
 
         logger.info("Loading permissions for note:" + noteId.toString());
 
@@ -236,6 +238,36 @@ public final class Note {
     }
 
     /**
+     * Loads roles for the specified note from the database.
+     * @param jdbcTemplate The JdbcTemplate to interact with the database.
+     * @param noteId The unique identifier of the note.
+     * @return A map of user roles for the note.
+     */
+    public static Map<UUID, Role> loadRoles(JdbcTemplate jdbcTemplate, UUID noteId) {
+        final String sql = """
+                SELECT user, role
+                FROM NoteUserRoles
+                WHERE note = ?
+                """;
+
+        logger.info("Loading roles for note:" + noteId.toString());
+
+        return jdbcTemplate.query(sql, (rs) -> {
+            Map<UUID, Role> rolesMap = HashMap.empty();
+    
+            while (rs.next()) {
+                UUID userId = UUID.fromString(rs.getString("user"));
+                Role role = Role.valueOf(rs.getString("role").toUpperCase());
+    
+                // Insert the role directly for each user
+                rolesMap = rolesMap.put(userId, role);
+            }
+    
+            return rolesMap;
+        }, noteId);
+    }
+
+    /**
      * Loads a note from the database along with its permissions.
      *
      * @param jdbcTemplate The JdbcTemplate to interact with the database.
@@ -251,7 +283,7 @@ public final class Note {
                               WHERE n.id = ?
                             """;
 
-        Map<UUID, Set<Permission>> permissions = loadPermissions(jdbcTemplate, noteId);
+        Map<UUID, Role> roles = loadRoles(jdbcTemplate, noteId);
         logger.info("Loading note:" + noteId.toString());
         Note note = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> new Note(
                 UUID.fromString(rs.getString("id")),
@@ -259,7 +291,7 @@ public final class Note {
                 rs.getString("name"),
                 Instant.parse(rs.getString("created")),
                 rs.getString("content"),
-                permissions
+                roles
         ), noteId.toString());
 
         if (note == null) {

@@ -18,9 +18,34 @@
             menu.style.left = event.pageX + 'px';
             menu.style.top = event.pageY + 'px';
         }
-        function confirmDelete(noteId) {
+        async function confirmDelete(noteId) {
             if (confirm("Are you sure you want to delete this note?")) {
-                window.location.href = '/note/delete/' + noteId;
+                const csrfToken = document.getElementById('xsrf-token').value;
+
+                await fetch('/note/delete/' + noteId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': csrfToken
+                    },
+                    
+                    body: JSON.stringify({ noteId: noteId })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Note deleted successfully!");
+                        window.location.reload(); 
+                    } else {
+                        console.log(response.text());
+                        console.log(response.statusText)
+                        
+                        alert("Failed to delete the note.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred while trying to delete the note.");
+                });
             }
         }
         function handleMenuClick(event) {
@@ -93,6 +118,7 @@
     </script>
 </head>
 <body>
+    <input type="hidden" id="xsrf-token" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" >    
     <header>
         <div class="nav-links">
             <a class="btn login" th:text="${username}"></a>
@@ -126,13 +152,24 @@
             <div th:each="note : ${notes}" class="menu" th:id="'menu-' + ${note.id}" onclick="handleMenuClick(event)">
                 <div class="menu-info"><p th:text="'Created: ' + ${#dates.format(note.created, 'dd MMM yyyy, HH:mm')}"></p></div>
                 <div class="menu-info"><p th:text="'Author: ' + ${note.author.username}"></p></div>
+                <div class="menu-info"><p th:text="'Role: ' + ${note.userRoles.get(userid).getOrElse('No Role').toString().toLowerCase()}"></p></div>
                 <div class="menu-item"
-                        th:if="${note.userPermissions.get(userid).getOrElse(emptyset).contains(write)}"
+                        th:if="${
+                            note.userRoles.get(userid).contains(owner) ||
+                            note.userRoles.get(userid).contains(admin) ||
+                            note.userRoles.get(userid).contains(editor)}"
                         th:data-note="${note.id}"
                         th:data-action="edit">Edit</div>
-                <div class="menu-item" th:data-note="${note.id}" th:data-action="share">Share</div>
+                <div class="menu-item" 
+                        th:if="${
+                            note.userRoles.get(userid).contains(owner) ||
+                            note.userRoles.get(userid).contains(admin)}"
+                        th:data-note="${note.id}" 
+                        th:data-action="share">Share</div>
                 <div class="menu-item"
-                        th:if="${note.userPermissions.get(userid).getOrElse(emptyset).contains(delete)}"
+                        th:if="${
+                            note.userRoles.get(userid).contains(owner) ||
+                            note.userRoles.get(userid).contains(admin)}"
                         th:data-note="${note.id}"
                         th:data-action="delete">Delete</div>
             </div>
@@ -164,5 +201,7 @@
             </div>
         </div>
     </div>
+
+
 </body>
 </html>

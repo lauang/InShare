@@ -93,7 +93,7 @@ public class RegistrationController {
 
         // //Check username format ok
         if (!checkUsernameFormat(registrationDto.username)) {
-            return ResponseEntity.ok(new RegistrationResponse(false, "Username must be at least 6 characters long and contain only letters, numbers and underscores!"));
+            return ResponseEntity.ok(new RegistrationResponse(false, "Username must be between 6 and 20 characters long and contain only letters, numbers and underscores!"));
         }
 
         // Check password format ok

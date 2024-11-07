@@ -25,7 +25,7 @@
             // Validate the username to contain only letters, numbers, and underscores
             const usernameIsValid = /^[a-zA-Z0-9_]{6,20}$/.test(username);
             if (!usernameIsValid) {
-                alert('Username must be at least 6 characters long and contain only letters, numbers, and underscores.');
+                alert('Username must be between 6 and 20 characters long and contain only letters, numbers, and underscores.');
                 return;
             }
 

@@ -251,16 +251,34 @@ By having restrictions on username as well will secure the application even futh
 
 Detail your plan for improving the authentication here.
 
+To improve these authentication related problems, I plan to hashing the passwords before storing them in the database and enforcing stronger password requirements.
+
+1. Install and configure the Argon2 library.
+2. Update the code to hash passwords using Argon2 before storage.
+3. User tests to ensure passwords are correctly hashed and stored.
+4. Implement password and username validation in both backend and frontend. 
+5. Write tests to verify that only compliant passwords are accepted. 
+
+
 Link to issue(s) created.
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
+
+There was two challanges I faced during the implementation.
+
+1. Determining the correct regular expression to enforce password strenght requirements. It took some trial and error to ensure that the regex covered all necessary criteria (at least one uppercase letter, one digit and one special character).
+
+2. Implementing the `registration` method to correctly hash the password before storing it.
+
 Link to commits which are part of the fix.
 
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
+
+
 
 Link to merge request with review.
 

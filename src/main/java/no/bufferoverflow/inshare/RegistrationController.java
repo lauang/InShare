@@ -90,7 +90,7 @@ public class RegistrationController {
         if (count != null && count > 0) {
             return ResponseEntity.ok(new RegistrationResponse(false, "Username already taken!"));
         }
-        
+
         // //Check username format ok
         if (!checkUsernameFormat(registrationDto.username)) {
             return ResponseEntity.ok(new RegistrationResponse(false, "Username must be at least 6 characters long and contain only letters, numbers and underscores!"));
@@ -108,7 +108,7 @@ public class RegistrationController {
     }
 
     private boolean checkUsernameFormat(String username) {
-        return username.matches("^[a-zA-Z0-9_]{6,}$");
+        return username.matches("^[a-zA-Z0-9_]{6,20}$");
     }   
 
     private boolean checkPasswordFormat(String password) {

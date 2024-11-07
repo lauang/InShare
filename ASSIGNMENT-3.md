@@ -243,6 +243,10 @@ Link to merge request with review.
 
 Short description of the issue.
 
+The primary issue with the current authentication system in InShare, is the weakness around password storage and password strenght requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced.
+
+By having restrictions on username as well will secure the application even futher, form for example SQL attacks.
+
 ### Planning
 
 Detail your plan for improving the authentication here.

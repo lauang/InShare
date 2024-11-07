@@ -29,7 +29,7 @@ public final class Note {
     public final String name;
     public final Instant created;
     public final String content;
-    private static final Logger logger = LoggerFactory.getLogger(SQLiteConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(Note.class);
 
     /**
      * A map representing the roles assigned to users.

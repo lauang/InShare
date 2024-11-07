@@ -107,11 +107,11 @@ public class RegistrationController {
         return ResponseEntity.ok(new RegistrationResponse(true, "Registration successful!"));
     }
 
-    private boolean checkUsernameFormat(String username) {
+    protected boolean checkUsernameFormat(String username) {
         return username.matches("^[a-zA-Z0-9_]{6,20}$");
     }   
 
-    private boolean checkPasswordFormat(String password) {
+    protected boolean checkPasswordFormat(String password) {
         return password.length() >= 8
         && password.matches(".*[0-9].*")
         && password.matches(".*[A-Z].*")

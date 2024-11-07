@@ -90,10 +90,31 @@ public class RegistrationController {
         if (count != null && count > 0) {
             return ResponseEntity.ok(new RegistrationResponse(false, "Username already taken!"));
         }
+        
+        // //Check username format ok
+        if (!checkUsernameFormat(registrationDto.username)) {
+            return ResponseEntity.ok(new RegistrationResponse(false, "Username must be at least 6 characters long and contain only letters, numbers and underscores!"));
+        }
+
+        // Check password format ok
+        if(!checkPasswordFormat(registrationDto.password)) {
+            return ResponseEntity.ok(new RegistrationResponse(false, "Password must be at least 8 characters long and contain at least one uppercase letter, one number and one special character!"));
+        }
 
         String hashedPassword = encoder.encode(registrationDto.password);
         (new User(registrationDto.username,hashedPassword)).save(jdbcTemplate);
         
         return ResponseEntity.ok(new RegistrationResponse(true, "Registration successful!"));
+    }
+
+    private boolean checkUsernameFormat(String username) {
+        return username.matches("^[a-zA-Z0-9_]{6,}$");
+    }   
+
+    private boolean checkPasswordFormat(String password) {
+        return password.length() >= 8
+        && password.matches(".*[0-9].*")
+        && password.matches(".*[A-Z].*")
+        && password.matches(".*[^a-zA-Z0-9].*");
     }
 }

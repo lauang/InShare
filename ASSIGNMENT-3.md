@@ -225,9 +225,11 @@ https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3
 
 Short description of the issue.
 
-The main XSS vulnerability in InShare centers around the content of the notes. Since we allow HTML tas for text formatting, there's a risk that malicious scripts could be within the note conten, leading to cross-site scripting attacks. For example, as we saw in the last assignment, this script `<script>alert("XSS attack");</script>` as note content, would trigger an alert every time the user refreshes the page. 
+The main XSS vulnerability in InShare centers around the content of the notes. Since we allow HTML tags for text formatting, there's a risk that malicious scripts could be within the note content, leading to cross-site scripting attacks. This can happen not only through direct input but also through request tampering, where an attacker manipulates requests to insert harmful scripts. For example, as we saw in the last assignment, a script like `<script>alert("XSS attack");</script>` in note content, would trigger an alert every time the user refreshes the page. 
 
-To address this, we need a solution that sanitizes the content of notes before they are displayed. Our approach is to use an HTML sanitizer, such as OWASP AntiSamy, which will strip out any potentially harmful tags or attributes while preserving the allowed HTML formatting.THis approach ensures that only safe and approved HTML tags are rendered, protecting against XSS vulnerabilities without removing the intended note formatting. 
+Although Quill editor provide some built-in sanitization on the frontend, this approach alone is not enough to secure the application. Just relying on frontend sanitization is risky because attackers can buypass it by sending manipulated requests to the backend.
+
+To address this, we need a solution that sanitizes the content of notes before they are displayed, in other words we need to sanitize in the backend. Our approach is to use an HTML sanitizer, such as OWASP AntiSamy, which will strip out any potentially harmful tags or attributes while preserving the allowed HTML formatting.This approach ensures that only safe and approved HTML tags are rendered, protecting against XSS vulnerabilities without removing the intended note formatting.
 
 ### Planning
 

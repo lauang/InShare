@@ -252,7 +252,7 @@ The system contains __Cross Site Request Forgery__ vulnerabilities due to missin
 
 **Identifying the issues**
 
-There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implenented on requests. We know actions check for authentication but this can be exploited on from an external site. Some of the requests use GET requests, this i not wrong but POST requests are generally safer with respect to csrf. Inspecting cookies reveals the httponly flag is enabled, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implemented on requests. We know actions check for authentication but this can be exploited from an external site. Some of the requests use GET requests, this is not wrong but POST requests are generally safer with respect to csrf. Inspecting cookies reveals the httponly flag is enabled for the session token, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
 
 **Issue summary**
 

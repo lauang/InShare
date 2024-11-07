@@ -235,7 +235,7 @@ Explain how you plan to mitigate the XSS vulnerability while keeping the formatt
 
 To migate the XSS vulnerability whle preserving formatting functionality, I plan to intefrate OWASP AntiSamy into the cote content rpocessing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags, and blocking any potential harmful scripts.
 
-First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `<b>`, `<u>`, `<i>`, `<a>` and `<blockquote>`.
+First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `a`, `p`, `div`, `i`, `b`, `em`, `blockquote`, `tt`, `strong`, `br`, `ul`, `ol`, `li`.
 
 When a note is created or updated, AntiSamy will scan and clean the content, based on the policy file. This ensures that the output only contains safe HTML, free from any script or XSS risks. After sanitization, the clean content will be returned as the content os the note.
 
@@ -261,7 +261,7 @@ To ensure that the XSS vulnerability is effectively mitigated, I took the follow
 - Run ZAP
   - analisys with Zap show no new security alerts related to the new code
 - Run SonarQube
-  - 
+  - Analisys with SonarQube shows no new security alerts related to the new code
 User tests:
   - Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
   - I manually tested inserting XSS scripts (e.g. `<script>alert("XSS attack");</script>`) into note content to ensure that it doesn't execute. 

@@ -258,11 +258,16 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 
 To ensure that the XSS vulnerability is effectively mitigated, I took the following steps:
 
-- Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
-- I manually tested inserting XSS scripts into note content to ensure that it doesn't execute. 
-- I have also manually tested that non-malicious note content are being preserved. 
-- I reviewed the AntiSamy Slashdot policy configuration to ensure it allows only safe tags and attributes for text formatting. 
-- To handle cases where the policy file might be missing, I included error handling in the `withContent` method. 
+- Run ZAP
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - 
+User tests:
+  - Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
+  - I manually tested inserting XSS scripts (e.g. `<script>alert("XSS attack");</script>`) into note content to ensure that it doesn't execute. 
+  - I have also manually tested that non-malicious note content are being preserved. 
+  - I reviewed the AntiSamy Slashdot policy configuration to ensure it allows only safe tags and attributes for text formatting. 
+  - To handle cases where the policy file might be missing, I included error handling in the `withContent` method. 
 
 
 Link to merge request with review.

@@ -225,24 +225,55 @@ https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3
 
 Short description of the issue.
 
+The main XSS vulnerability in InShare centers around the content of the notes. Since we allow HTML tags for text formatting, there's a risk that malicious scripts could be within the note content, leading to cross-site scripting attacks. This can happen not only through direct input but also through request tampering, where an attacker manipulates requests to insert harmful scripts. For example, as we saw in the last assignment, a script like `<script>alert("XSS attack");</script>` in note content, would trigger an alert every time the user refreshes the page. 
+
+Although Quill editor provide some built-in sanitization on the frontend, this approach alone is not enough to secure the application. Just relying on frontend sanitization is risky because attackers can buypass it by sending manipulated requests to the backend.
+
+To address this, we need a solution that sanitizes the content of notes before they are displayed, in other words we need to sanitize in the backend. Our approach is to use an HTML sanitizer, such as OWASP AntiSamy, which will strip out any potentially harmful tags or attributes while preserving the allowed HTML formatting.This approach ensures that only safe and approved HTML tags are rendered, protecting against XSS vulnerabilities without removing the intended note formatting.
+
 ### Planning
 
 Explain how you plan to mitigate the XSS vulnerability while keeping the formatting functionality.
 
+To migate the XSS vulnerability whle preserving formatting functionality, I plan to intefrate OWASP AntiSamy into the cote content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags, and blocking any potential harmful scripts.
+
+First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `a`, `p`, `div`, `i`, `b`, `em`, `blockquote`, `tt`, `strong`, `br`, `ul`, `ol`, `li`.
+
+When a note is created or updated, AntiSamy will scan and clean the content, based on the policy file. This ensures that the output only contains safe HTML, free from any script or XSS risks. After sanitization, the clean content will be returned as the content os the note.
+
 Link to issue(s) created.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/21
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 
+The only challange I faced during the implementation was figuring out how to handle the AntiSamy policy file without downloading it directly into the project. Using an `InputStream` solved the problem by allowing the policy file to be streamed at runtime, simplifying the implementation and minimizing the need for file management. 
+
 Link to commits which are part of the fix.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id=1743a1ec78cc576e2f850ac2a945a0ec1658a73b
+
 
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
 
-Link to merge request with review.
+To ensure that the XSS vulnerability is effectively mitigated, I took the following steps:
 
+- Run ZAP
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys with SonarQube shows no new security alerts related to the new code
+User tests:
+  - Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
+  - I manually tested inserting XSS scripts (e.g. `<script>alert("XSS attack");</script>`) into note content to ensure that it doesn't execute. 
+  - I have also manually tested that non-malicious note content are being preserved. 
+  - I reviewed the AntiSamy Slashdot policy configuration to ensure it allows only safe tags and attributes for text formatting. 
+  - To handle cases where the policy file might be missing, I included error handling in the `withContent` method. 
+
+
+Link to merge request with review.
+https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6
 
 ## CSRF Protection (2 pts)
 

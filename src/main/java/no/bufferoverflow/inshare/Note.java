@@ -14,6 +14,10 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.Comparator;
 
+import org.owasp.validator.html.*;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * Represents a Note in the InShare application.
  * A Note is defined by an ID, name, creation timestamp, content,
@@ -109,15 +113,27 @@ public final class Note {
      * @return A new Note instance with the updated content.
      */
     public Note withContent(String content) {
-        return new Note( this.id
-                       , this.author
-                       , this.name
-                       , this.created
-                       , content
-                       , this.userRoles);
+        try (InputStream policyStream = getClass().getClassLoader().getResourceAsStream("antisamy-slashdot.xml")) {
+            if (policyStream == null) {
+                throw new IllegalArgumentException("Policy file not found.");
+            }
+            Policy policy = Policy.getInstance(policyStream);
+            AntiSamy antiSamy = new AntiSamy();
+            CleanResults cleanResults = antiSamy.scan(content, policy);
+            String sanitizedContent = cleanResults.getCleanHTML();
+
+            return new Note( this.id
+                           , this.author
+                           , this.name
+                           , this.created
+                           , sanitizedContent
+                           , this.userRoles);
+
+        } catch (PolicyException | ScanException | IOException e) {
+            logger.error("Error while sanitizing content: " + e.getMessage());
+            throw new RuntimeException("Failed to sanitize content", e);
+        }
     }
-
-
 
     /**
      * Returns a new Note with the updated user permissions.

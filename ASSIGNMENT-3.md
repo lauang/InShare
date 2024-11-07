@@ -233,7 +233,7 @@ To address this, we need a solution that sanitizes the content of notes before t
 
 Explain how you plan to mitigate the XSS vulnerability while keeping the formatting functionality.
 
-To migate the XSS vulnerability whle preserving formatting functionality, I plan to intefrate OWASP AntiSamy into the cote content rpocessing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags, and blocking any potential harmful scripts.
+To migate the XSS vulnerability whle preserving formatting functionality, I plan to intefrate OWASP AntiSamy into the cote content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags, and blocking any potential harmful scripts.
 
 First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `a`, `p`, `div`, `i`, `b`, `em`, `blockquote`, `tt`, `strong`, `br`, `ul`, `ol`, `li`.
 

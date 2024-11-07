@@ -246,22 +246,54 @@ Link to merge request with review.
 
 ## CSRF Protection (2 pts)
 
-Short description of the issue.
+The system contains __Cross Site Request Forgery__ vulnerabilities due to missing protection in the form of absent tokens and a "relaxed" approach to flags on cookies. Without proper csrf protection, attackers can exploit a user's session to perform malicious actions.
 
 ### Planning
 
-Describe your plan to implement CSRF protection here.
+**Identifying the issues**
 
-Link to issue(s) created.
+There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implemented on requests. We know actions check for authentication but this can be exploited from an external site. Some of the requests use GET requests, this is not wrong but POST requests are generally safer with respect to csrf. Inspecting cookies reveals the httponly flag is enabled for the session token, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+
+**Issue summary**
+
+- Enable csrf tokens globally in `SecurityConfig.java`
+- Change action delete from a GET requet to a DELETE request.
+- implement csrf tokens for requests.
+
+**CSRF issue (individual steps are split to child items):**
+
+[Link to issue(s)](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/2) 
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 Link to commits which are part of the fix.
 
+I removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I faced was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests. I therefore changed this to a DELETE request and added the csrf token to the request.
+
+The GET request for edits could also be considered a vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit it manually and a POST request with the new content would be sent. This POST request would be stopped if it was a csrf.
+
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
+
+**Testing the security of AC model**
+
+- Run Zap
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys before fix:
+  "Make sure disabling Spring Security's CSRF protection is safe here." refering to csrf.disable().
+  - Analysis after fix:
+  This alert is now only related to the register page, which should be safe without a csrf token.
+- User Tests
+  - Created a link for deleting a note, the note is not deleted when the link is clicked
+  - Ensured normal functionality still works as expected
+    - register new users
+    - login
+    - sharing
+    - deleting (the correct way)
+    - editing
 
 Link to merge request with review.
 

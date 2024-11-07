@@ -257,10 +257,8 @@ There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityC
 **Issue summary**
 
 - Enable csrf tokens globally in `SecurityConfig.java`
-- Explore possibility of converting GET requests to POST/DELETE requests
+- Change action delete from a GET requet to a DELETE request.
 - implement csrf tokens for requests.
-- Change samesite flag to "strict"
-- ?Explore possibility for TLS and HTTPS -> secure flag "true"
 
 **CSRF issue (individual steps are split to child items):**
 
@@ -271,15 +269,31 @@ There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityC
 Describe any challenges you faced in the implementation.
 Link to commits which are part of the fix.
 
-**Enable csrf tokens globally in `SecurityConfig.java`**
-CSRF tokens are enabled by default unless otherwise is specified. To solve this issue i removed the line which disables the csrf in `SecurityConfig.java`. This step is connected to 'implement csrf tokens for all requests'.
+I removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I faced was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests. I therefore changed this to a DELETE request and added the csrf token to the request.
 
-**implement csrf tokens for all requests**
-When enabling the token, this token is automatically handled with all thymeleaf request. The registration form however, does not use thymeleaf and the token then creates and error. Here the tokens must be implemented manually.
+The GET request for edits could also be considered a vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit it manually and a POST request with the new content would be sent. This POST request would be stopped if it was a csrf.
 
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
+
+**Testing the security of AC model**
+
+- Run Zap
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys before fix:
+  "Make sure disabling Spring Security's CSRF protection is safe here." refering to csrf.disable().
+  - Analysis after fix:
+  This alert is now only related to the register page, which should be safe without a csrf token.
+- User Tests
+  - Created a link for deleting a note, the note is not deleted when the link is clicked
+  - Ensured normal functionality still works as expected
+    - register new users
+    - login
+    - sharing
+    - deleting (the correct way)
+    - editing
 
 Link to merge request with review.
 

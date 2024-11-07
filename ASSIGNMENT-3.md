@@ -278,6 +278,21 @@ Link to commits which are part of the fix.
 
 Describe the steps you have taken to ensure that the issue is really fixed.
 
+- Run Zap
+  - Analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys with SonarQube shows no new security alerts related to the new code
+- User tests:
+  - Manually checked different usernames and passwords to ensure that the implementation makes sure the formatting is correct, and that the user gets the errors as expected. 
+  - Verified that the passwords are hashed and stored correctly in the database.
+- Unit tests for helper methods
+  - Verified that `checkUsernameFormat` and `checkPasswordFormat` enforce the correct rules for usernames and passwords.
+- Tested registration flow
+  - Registering with valid usernames and passwords.
+  - Attempting to register with invalid usernames.
+  - Attemting to register with weak passwords.
+  - Preventing duplicate usernames. Tests confirm that only valid registrations proceed and passwords are hashed correctly.
+
 
 
 Link to merge request with review.

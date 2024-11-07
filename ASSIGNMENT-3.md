@@ -472,8 +472,7 @@ Link to merge request with review.
 
 ## Logging System Improvement (1 pts)
 
-Give a short description of the principles behind security logging.
-
+Security logging is important in software security to detect and respond to security related incidents. Logs provide a traceable flow of significant actions. It's important that we are selective in what we choose to log and make sure to keep the same standards for integrity and data consistency in the log. This way we can trace attacks back to the attacker and identify vulnerabilities.
 
 ### Planning
 
@@ -504,9 +503,6 @@ Currently in Inshare the only logging is in `Note.java` and `SQLiteConfig.java`.
 - Note Actions, log the type of action, user(s) involved, and the note.
 
 **All these logging events** should of course avoid violationg any form of user privacy or share sensitive data.
-
-
-
 
 Describe what events should be logged, and how you will implement this.
 

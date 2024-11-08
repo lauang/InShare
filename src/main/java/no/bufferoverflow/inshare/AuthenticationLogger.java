@@ -10,11 +10,19 @@ import org.springframework.security.authentication.event.AuthenticationSuccessEv
 import org.springframework.security.authentication.event.LogoutSuccessEvent;
 import org.springframework.stereotype.Component;
 
+/**
+ * Class for logging authentication events.
+ */
 @Component
 public class AuthenticationLogger {
     /*Logger for Authentication */
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationLogger.class);
 
+    /**
+     * Logs a successful login event.
+     * Logs an info message with the username and timestamp of the successful login.
+     * @param event the successful login event
+     */
     @EventListener
     public void loginEvent(AuthenticationSuccessEvent event) {
         User user = ((User) event.getAuthentication().getPrincipal());
@@ -24,6 +32,11 @@ public class AuthenticationLogger {
         logger.info("user: {}, timestamp: {}, message: logged in successfully", user.id, timestamp);
     }
 
+    /**
+     * Logs a successful logout event.
+     * Logs an info message with the username and timestamp of the successful logout.
+     * @param event the successful logout event
+     */
     @EventListener
     public void logoutEvent(LogoutSuccessEvent event) {
         User user = ((User) event.getAuthentication().getPrincipal());
@@ -33,6 +46,11 @@ public class AuthenticationLogger {
         logger.info("user: {}, timestamp: {}, message: logged out", user.id, timestamp);
     }
 
+    /**
+     * Logs a failed login event.
+     * Logs a warning message with the username and timestamp of the failed login attempt.
+     * @param event the failed login event
+     */
     @EventListener
     public void failedLoginEvent(AuthenticationFailureBadCredentialsEvent event) {
         String username = (String) event.getAuthentication().getPrincipal();

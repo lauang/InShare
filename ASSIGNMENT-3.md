@@ -481,46 +481,46 @@ Security logging is important in software security to detect and respond to secu
 Currently in Inshare the only logging is in `Note.java` and `SQLiteConfig.java`. The loggers in the two classes log the events; 'enabling foreign key support', 'load note' and 'load roles'. It is not wrong to log these events, but they are not critical and should not be in focus when there is else where no logging.
 
 **What should be logged (based on slides)**
+For extra context I have included some scenarios which will not be logged in the Inshare system, I denote these with (?). These scenarios are just examples of what could be logged to satisfy requirements from the slides, they are not important wrt. the inshare system and can be overlooked.
 
 - Authentication events
-  - Successful Logins: Log successful login events with the username, timestamp.
-  - Failed Login Attempts: Log failed attempts to detect potential brute-force attacks. Include details like username attempted and timestamp.
+  - Successful Logins: Log successful login events with the.
+  - Failed Login Attempts: Log failed attempts to detect potential brute-force attacks. 
   - Logout Events: Track when users log out, this provides a picture of session length.
-  - ?Session Token Generation and Expiration (might be relevant with respect to the CSRF task)
+  - (?)Session Token Generation and Expiration
 - Attempted intrusions
-  - SQL Injection Attempts: If the system detects suspicious input patterns. log the input, user, and timestamp.
-  - Cross-Site Scripting (XSS) Attempts: Log any detected scripts. log input, user and timestamp.
-  - Unauthorized Access Attempts: Log instances caught at backend. Include the user’s role, attempted action, and target note ID.
-  - ?Suspicious API Access: Record attempts at request tampering.
+  - SQL Injection Attempts: If the system detects suspicious input patterns at backend.
+  - Cross-Site Scripting (XSS) Attempts: Log any detected scripts at backend. 
+  - Unauthorized Access Attempts: Log instances caught at backend. 
+  - (?) Suspicious API Access: Record attempts at request tampering.
 - Violations of invariants
-  - Data consistency violations: ex, editor tries to delete a note.
+  - Data consistency violations: ex, editor tries to delete a note (overlaps with *unauthorized acces atempts*).
 - Unusual behaviour
-  - ?Abnormal frequency of notesharing.
-- Performance statistics
-  - Log loading times. 
-  - Log request latency.
+  - (?) Abnormal frequency of notesharing.
+- (?) Performance statistics
+  - (?) Log loading times. 
+  - (?) Log request latency.
 
-- Note Actions, log the type of action, user(s) involved, and the note.
+- Note Actions, log all actions with the type of action, user involved, and the note.
 
 **All these logging events** should of course avoid violationg any form of user privacy or share sensitive data.
 
-Describe what events should be logged, and how you will implement this.
+**What are you recommendations for log monitoring and response for InShare?**
 
-What are you recommendations for log monitoring and response for InShare?
+If we wanted to deploy inshare in a realistic environment the current (and improved) logging mechanisms should undergo more improvent. Based on defined key security events we want to monitor, these should be logged to an external service where they could be stored (could be stored in the DB, but this would a be some what artifical solution), alternatively a cloud based solution which offers analysis tools. When alerts are then triggered by analysis in the cloud or by some self integrated analysis system, there should be some pre-defined routines for incident/threat detection response based on the type of alert.
 
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/29)
 
 ### Implementation
 
-Describe any challenges you faced in the implementation.
 Link to commits which implement logging.
 
-We chose to stick with the current logging system. Ideally the logging should be forwarded to an external service. In Inshare we used the `Logger` which logs it to the terminal. The logger provides some options and In our solution we have used `Info`, `Warn` and `Error` based on what type of event is being logged.
+We chose to stick with the current logging system. Ideally the logging should be forwarded to an external service. In Inshare we used the `Logger` which logs it to the terminal. The logger provides some options and in our solution we have used `Info`, `Warn` and `Error` based on what type of event is being logged.
 
 **What we logged**
 
 `NoteController`
-Logged with a helper method which logs the related user.id, the note.id and a message. Takes inn a boolean error to log info or error
+Logged with a helper method which logs the related user.id, the note.id and a message. Also takes a `boolean error` to log info or error
   - Successfull note actions, logged with `.info`
   - Unsuccessfull note actions, logged with `.error`
 
@@ -540,7 +540,7 @@ Log event related to (un)successfull registration events
   - Successfull registration, logged with `.info`
   - Illegal username caught at backend, logged with `.warn`
   - Illegal password caught at backend, logged with `.warn`
-  - unsuccesful due to taken username, logged with `.error`
+  - Unsuccessful due to taken username, logged with `.error`
 
 ### Review
 

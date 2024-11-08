@@ -41,6 +41,6 @@ public class SecurityConfig {
     @Autowired
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder);
+            .passwordEncoder(passwordEncoder);
     }
 }

@@ -29,7 +29,7 @@ public final class Note {
     public final String name;
     public final Instant created;
     public final String content;
-    private static final Logger logger = LoggerFactory.getLogger(SQLiteConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(Note.class);
 
     /**
      * A map representing the roles assigned to users.
@@ -121,6 +121,10 @@ public final class Note {
             AntiSamy antiSamy = new AntiSamy();
             CleanResults cleanResults = antiSamy.scan(content, policy);
             String sanitizedContent = cleanResults.getCleanHTML();
+
+            if (!sanitizedContent.equals(content)) {
+                logger.warn("note: {}, message: illegal content caught at backend requiring sanititzation, potential attack detected", this.id);
+            }
 
             return new Note( this.id
                            , this.author

@@ -1,5 +1,7 @@
 package no.bufferoverflow.inshare;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,9 @@ public class NoteController {
     /** Service for loading user details and authentication. */
     private final InShareUserDetailService userDetailService;
 
+    /** Logger for the NoteController class. */
+    private static final Logger logger = LoggerFactory.getLogger(NoteController.class);
+
     public NoteController(JdbcTemplate jdbcTemplate, InShareUserDetailService userDetailService) {
         this.jdbcTemplate = jdbcTemplate;
         this.userDetailService = userDetailService;
@@ -55,8 +60,10 @@ public class NoteController {
         model.addAttribute("note", note);
 
         if (checkPermission(id, Permission.READ)) {
+            logNoteAction(id, "viewed note", false);
             return "viewNote"; // Check if user has read permission before displaying note
         } else {
+            logNoteAction(id, "Tried to view without READ permission", true);
             return "redirect:/"; // Redirect to dashboard if user does not have read permission
         }
     }
@@ -73,8 +80,10 @@ public class NoteController {
         Note note = Note.load(jdbcTemplate, id);
         model.addAttribute("note", note);
         if (checkPermission(id, Permission.WRITE)) { // Check if user has write permission before displaying edit form
+            logNoteAction(id, "User entered edit form", false);
             return "editNote";
         } else { // Redirect to dashboard if user does not have write permission
+            logNoteAction(id, "Tried to enter edit form without WRITE permission", true);
             return "redirect:/"; 
         }
     }
@@ -97,7 +106,12 @@ public class NoteController {
                         .withName(name)
                         .withContent(content);
 
-        if (checkPermission(id, Permission.WRITE)) note.save(jdbcTemplate); // Check if user has write permission before saving changes
+        if (checkPermission(id, Permission.WRITE)){
+            note.save(jdbcTemplate); // Check if user has write permission before saving changes
+            logNoteAction(id, "User updated note", false);
+        } else {
+            logNoteAction(id, "Tried to update note content without WRITE permission", true);
+        }
         return "redirect:/"; // Redirect to dashboard after update
     }
 
@@ -129,6 +143,7 @@ public class NoteController {
                                 .withUserRole(user, Note.Role.OWNER);
                                 
             newNote.save(jdbcTemplate);
+            logNoteAction(null, "created new note", false);
             return "redirect:/note/edit/" + newNote.id.toString();
         }
         return "redirect:/";
@@ -149,9 +164,11 @@ public class NoteController {
         if (checkPermission(id, Permission.DELETE)) {
             final String deleteNote = "DELETE FROM Note WHERE id = ?";
             jdbcTemplate.update(deleteNote, id.toString());
+            logNoteAction(id, "User deleted note", false);
             return ResponseEntity.ok().body("{\"message\": \"Note deleted successfully!\"}");
         } else {
             // Return forbidden status if user lacks permissions
+            logNoteAction(id, "Tried to delete note without DELETE permission", true);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                                 .body("{\"error\": \"You do not have permission to delete this note.\"}");
         }   
@@ -173,8 +190,10 @@ public class NoteController {
         model.addAttribute("isOwner", isOwner);
         
         if (checkRole(id, Note.Role.OWNER) || checkRole(id, Note.Role.ADMINISTRATOR)) {
+            logNoteAction(id, "Entered share form", isOwner);
             return "shareNote";
         } else {
+            logNoteAction(id, "Tried to enter share form without OWNER or ADMINISTRATOR role", true);
             return "redirect:/"; // Redirect to dashboard if user does not have permission to share
         }
     }
@@ -228,24 +247,29 @@ public class NoteController {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User issuer = (User) authentication.getPrincipal();
         if (user.id.equals(issuer.id)) { //cannot share with self
+            logNoteAction(noteId, "Tried to share with self", true);
             return "redirect:/";
         }
 
         // check role of the issuer
         Note.Role issuerRole = note.userRoles.get(issuer.id).getOrElse(Note.Role.READER);
         if (!issuerRole.equals(Note.Role.OWNER) && !issuerRole.equals(Note.Role.ADMINISTRATOR)) {
+            logNoteAction(noteId, "Tried to share without OWNER or ADMINISTRATOR role", true);
             return "redirect:/"; //not allowed to share
         }
 
         if (role.equals(Note.Role.OWNER)) { // only owner can transfer ownership
             if (issuerRole.equals(Note.Role.OWNER)) {
+                logNoteAction(noteId, "Transfered ownership", false);
                 note = note.withUserRole(issuer, Note.Role.ADMINISTRATOR); //revoke owner role
             } else {
+                logNoteAction(noteId, "Tried to transfer ownership without OWNER role", true);
                 return "redirect:/";
             }
         }
         
         note = note.withUserRole(user, role);
+        logNoteAction(noteId, "Shared note", false);
         note.save(jdbcTemplate);
         return "redirect:/";
     }
@@ -276,8 +300,20 @@ public class NoteController {
             Note note = Note.load(jdbcTemplate, noteId);
             Map<UUID, Set<Permission>> permissions = Note.loadPermissions(jdbcTemplate, noteId);
             return permissions.get(user.id).getOrElse(HashSet.of()).contains(permission);
-            //return note.userPermissions.get(user.id).isDefined() && note.userPermissions.get(user.id).get().contains(permission);
-
         } else return false;
+    }
+
+    private void logNoteAction(UUID noteId, String message, boolean error) {
+        final Authentication authentication
+            = SecurityContextHolder.getContext()
+                                   .getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()
+                && (authentication.getPrincipal() instanceof User)) {
+            final User user = (User)authentication.getPrincipal();
+
+            if (error) logger.error("User: {}, note: {}, message: {}", user.id, noteId, message);
+            else logger.info("User: {}, note: {}, message: {}", user.id, noteId, message);
+        }
     }
 }

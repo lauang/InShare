@@ -122,6 +122,10 @@ public final class Note {
             CleanResults cleanResults = antiSamy.scan(content, policy);
             String sanitizedContent = cleanResults.getCleanHTML();
 
+            if (!sanitizedContent.equals(content)) {
+                logger.warn("note: {}, message: illegal content caught at backend requiring sanititzation, potential attack detected" + this.id);
+            }
+
             return new Note( this.id
                            , this.author
                            , this.name

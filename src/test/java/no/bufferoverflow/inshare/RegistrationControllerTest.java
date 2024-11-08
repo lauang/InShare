@@ -75,7 +75,7 @@ public class RegistrationControllerTest {
         // Assertions
         assertNotNull(response);
         assertFalse(response.getBody().success);
-        assertEquals("Username must be at least 6 characters long and contain only letters, numbers and underscores!", response.getBody().message);
+        assertEquals("Username must be between 6 and 20 characters long and contain only letters, numbers and underscores!", response.getBody().message);
         verify(encoder, never()).encode(anyString()); // Password hashing should not be called
     }
 

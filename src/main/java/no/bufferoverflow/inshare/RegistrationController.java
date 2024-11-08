@@ -98,13 +98,13 @@ public class RegistrationController {
 
         // //Check username format ok
         if (!PasswordUtils.checkUsernameFormat(registrationDto.username)) {
-            logger.error("attempted username: {}, message: Illegal username format caught at backend", registrationDto.username);
+            logger.warn("attempted username: {}, message: Illegal username format caught at backend", registrationDto.username);
             return ResponseEntity.ok(new RegistrationResponse(false, "Username must be between 6 and 20 characters long and contain only letters, numbers and underscores!"));
         }
 
         // Check password format ok
         if(!PasswordUtils.checkPasswordFormat(registrationDto.password)) {
-            logger.error("attempted usernam: {}, message: Illegal password format caught at backend", registrationDto.username);
+            logger.warn("attempted username: {}, message: Illegal password format caught at backend", registrationDto.username);
             return ResponseEntity.ok(new RegistrationResponse(false, "Password must be at least 8 characters long and contain at least one uppercase letter, one number and one special character!"));
         }
 

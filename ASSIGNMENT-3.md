@@ -333,22 +333,61 @@ Link to merge request with review.
 
 Short description of the issue.
 
+The primary issue with the current authentication system in InShare, is the weakness around password storage and password strength requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced. By having restrictions on username, where it can only contain letters, numbers and underscores as well as a length check, where it should be between 6 and 20 characters, will secure the application even futher.
+
 ### Planning
 
 Detail your plan for improving the authentication here.
 
-Link to issue(s) created.
+To improve these authentication related problems, I plan to hashing the passwords before storing them in the database and enforcing stronger password requirements.
+
+1. Install and configure the Argon2 library.
+2. Update the code to hash passwords using Argon2 before storage.
+3. User tests to ensure passwords are correctly hashed and stored.
+4. Implement password and username validation in both backend and frontend.
+5. Check both password and username with regex-patterns, where:
+    - 5.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
+    - 5.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
+6. Write tests to verify that only compliant passwords are accepted. 
+
+
+[Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/8)
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
-Link to commits which are part of the fix.
+
+There was two challanges I faced during the implementation.
+
+1. Determining the correct regular expression to enforce password strenght requirements. It took some trial and error to ensure that the regex covered all necessary criteria (at least one uppercase letter, one digit and one special character).
+
+2. Implementing the `registration` method to correctly hash the password before storing it.
+
+[Link to commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/commits?commit_id=7e50b17d669b93b067213c30442ae288da79f9ec)
+
 
 ### Review
 
 Describe the steps you have taken to ensure that the issue is really fixed.
 
-Link to merge request with review.
+- Run Zap
+  - Analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys with SonarQube shows no new security alerts related to the new code
+- User tests:
+  - Manually checked different usernames and passwords to ensure that the implementation makes sure the formatting is correct, and that the user gets the errors as expected. 
+  - Verified that the passwords are hashed and stored correctly in the database.
+- Unit tests for helper methods
+  - Verified that `checkUsernameFormat` and `checkPasswordFormat` enforce the correct rules for usernames and passwords.
+- Tested registration flow
+  - Registering with valid usernames and passwords.
+  - Attempting to register with invalid usernames.
+  - Attemting to register with weak passwords.
+  - Preventing duplicate usernames. Tests confirm that only valid registrations proceed and passwords are hashed correctly.
+
+
+
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2?commit_id=55979032db29a2ac1e6d068f7aa3b88ff920ed0c#39d0edf47f695698608b884b9773e3f0f285a55d)
 
 
 ## Access Control Improvement (4 pts)

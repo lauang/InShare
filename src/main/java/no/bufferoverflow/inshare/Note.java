@@ -222,7 +222,7 @@ public final class Note {
             WHERE nur.note = ?
         """; 
 
-        //logger.info("Loading permissions for note:" + noteId.toString());
+        logger.info("Loading permissions for note:" + noteId.toString());
 
         return jdbcTemplate.query(sql, (rs) -> {
             Map<UUID, Set<Permission>> permissionsMap = HashMap.empty();
@@ -254,7 +254,7 @@ public final class Note {
                 WHERE note = ?
                 """;
 
-        //logger.info("Loading roles for note:" + noteId.toString());
+        logger.info("Loading roles for note:" + noteId.toString());
 
         return jdbcTemplate.query(sql, (rs) -> {
             Map<UUID, Role> rolesMap = HashMap.empty();

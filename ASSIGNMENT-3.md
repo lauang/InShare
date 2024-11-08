@@ -515,6 +515,25 @@ What are you recommendations for log monitoring and response for InShare?
 Describe any challenges you faced in the implementation.
 Link to commits which implement logging.
 
+We chose to stick with the current logging system. Ideally the logging should be forwarded to an external service. In Inshare we used the `Logger` which logs it to the terminal. The logger provides some options and In our solution we have used `Info`, `Warn` and `Error` based on what type of event is being logged.
+
+**What we logged**
+
+`NoteController`
+Logged with a helper method which logs the related user.id, the note.id and a message. Takes inn a boolean error to log info or error
+  - Successfull note actions, logged with `.info`
+  - Unsuccessfull note actions, logged with `.error`
+
+`AuthenticationLogger`
+A new EventListener class which listens for authentication related events. Logs events with the related user and the timestamp.
+  - Successfull login, logged with `.info`
+  - Failed login/bad credentials, logged with `.warn`
+  - Log out, logged with `.info`
+
+`Note`
+Logs some Note related actions and security breaches. The need for content sanitization at backend might indicate an attempt at xss or sql injection.
+  - Log backend sanitization, logged with `.warn`
+
 ### Review
 
 Link to merge request with review.

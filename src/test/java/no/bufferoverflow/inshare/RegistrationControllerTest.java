@@ -129,27 +129,27 @@ public class RegistrationControllerTest {
     @Test
     public void testCheckUsernameFormat() {
         // Valid usernames
-        assertTrue(registrationController.checkUsernameFormat("validUser"));
-        assertTrue(registrationController.checkUsernameFormat("user1234"));
-        assertTrue(registrationController.checkUsernameFormat("user_name"));
+        assertTrue(PasswordUtils.checkUsernameFormat("validUser"));
+        assertTrue(PasswordUtils.checkUsernameFormat("user1234"));
+        assertTrue(PasswordUtils.checkUsernameFormat("user_name"));
 
         // Invalid usernames
-        assertFalse(registrationController.checkUsernameFormat("us")); // Too short
-        assertFalse(registrationController.checkUsernameFormat("user*name")); // Contains invalid character *
-        assertFalse(registrationController.checkUsernameFormat("thisusernameistoolongforvalidation")); // Exceeds max length
+        assertFalse(PasswordUtils.checkUsernameFormat("us")); // Too short
+        assertFalse(PasswordUtils.checkUsernameFormat("user*name")); // Contains invalid character *
+        assertFalse(PasswordUtils.checkUsernameFormat("thisusernameistoolongforvalidation")); // Exceeds max length
     }
 
     @Test
     public void testCheckPasswordFormat() {
         // Valid passwords
-        assertTrue(registrationController.checkPasswordFormat("ValidPass1!")); // Meets all criteria
-        assertTrue(registrationController.checkPasswordFormat("Strong1@")); // Minimum length, includes uppercase, number, and special character
-
+        assertTrue(PasswordUtils.checkPasswordFormat("ValidPass1!")); // Meets all criteria
+        assertTrue(PasswordUtils.checkPasswordFormat("ValidPass1!")); // Meets all criteria
+        assertTrue(PasswordUtils.checkPasswordFormat("Strong1@")); // Minimum length, includes uppercase, number, and special character
         // Invalid passwords
-        assertFalse(registrationController.checkPasswordFormat("weakpass")); // No uppercase, number, or special character
-        assertFalse(registrationController.checkPasswordFormat("Weakpass")); // No number or special character
-        assertFalse(registrationController.checkPasswordFormat("weakpass1!")); // No uppercase letter
-        assertFalse(registrationController.checkPasswordFormat("SHORT1!")); // Less than 8 characters
+        assertFalse(PasswordUtils.checkPasswordFormat("weakpass")); // No uppercase, number, or special character
+        assertFalse(PasswordUtils.checkPasswordFormat("Weakpass")); // No number or special character
+        assertFalse(PasswordUtils.checkPasswordFormat("weakpass1!")); // No uppercase letter
+        assertFalse(PasswordUtils.checkPasswordFormat("SHORT1!")); // Less than 8 characters
     }
 
 }

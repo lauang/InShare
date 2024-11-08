@@ -350,7 +350,7 @@ To improve these authentication related problems, I plan to hashing the password
 5. Write tests to verify that only compliant passwords are accepted. 
 
 
-Link to issue(s) created.
+[Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/8)
 
 ### Implementation
 
@@ -362,7 +362,8 @@ There was two challanges I faced during the implementation.
 
 2. Implementing the `registration` method to correctly hash the password before storing it.
 
-Link to commits which are part of the fix.
+[Link to commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/commits?commit_id=7e50b17d669b93b067213c30442ae288da79f9ec)
+
 
 ### Review
 
@@ -385,7 +386,7 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 
 
 
-Link to merge request with review.
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2?commit_id=55979032db29a2ac1e6d068f7aa3b88ff920ed0c#39d0edf47f695698608b884b9773e3f0f285a55d)
 
 
 ## Access Control Improvement (4 pts)

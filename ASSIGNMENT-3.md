@@ -533,8 +533,28 @@ A new EventListener class which listens for authentication related events. Logs 
 `Note`
 Logs some Note related actions and security breaches. The need for content sanitization at backend might indicate an attempt at xss or sql injection.
   - Log backend sanitization, logged with `.warn`
+  - Kept former logging events
+
+`RegistrationController`
+Log event related to (un)successfull registration events
+  - Successfull registration, logged with `.info`
+  - Illegal username caught at backend, logged with `.warn`
+  - Illegal password caught at backend, logged with `.warn`
+  - unsuccesful due to taken username, logged with `.error`
 
 ### Review
+
+- Run Zap
+  - analisys with Zap show no new security alerts related to the new code
+- Run SonarQube
+  - Analisys with sonarqube show no new security issues related to new code
+- UserTests
+  - Tested normal functionality works as expected
+    - register
+    - login
+    - note actions, edit, share, read, delete
+  - tested sample actions legal and ilegal is logged. ex. backend sanitization is caught and logged, note actions are logged
+
 
 Link to merge request with review.
 

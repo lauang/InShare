@@ -333,9 +333,7 @@ Link to merge request with review.
 
 Short description of the issue.
 
-The primary issue with the current authentication system in InShare, is the weakness around password storage and password strength requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced.
-
-By having restrictions on username as well will secure the application even futher, form for example SQL attacks.
+The primary issue with the current authentication system in InShare, is the weakness around password storage and password strength requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced. By having restrictions on username, where it can only contain letters, numbers and underscores as well as a length check, where it should be between 6 and 20 characters, will secure the application even futher.
 
 ### Planning
 
@@ -346,8 +344,11 @@ To improve these authentication related problems, I plan to hashing the password
 1. Install and configure the Argon2 library.
 2. Update the code to hash passwords using Argon2 before storage.
 3. User tests to ensure passwords are correctly hashed and stored.
-4. Implement password and username validation in both backend and frontend. 
-5. Write tests to verify that only compliant passwords are accepted. 
+4. Implement password and username validation in both backend and frontend.
+5. Check both password and username with regex-patterns, where:
+  - 5.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
+  - 5.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
+6. Write tests to verify that only compliant passwords are accepted. 
 
 
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/8)

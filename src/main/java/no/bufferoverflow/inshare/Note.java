@@ -123,7 +123,7 @@ public final class Note {
             String sanitizedContent = cleanResults.getCleanHTML();
 
             if (!sanitizedContent.equals(content)) {
-                logger.warn("note: {}, message: illegal content caught at backend requiring sanititzation, potential attack detected" + this.id);
+                logger.warn("note: {}, message: illegal content caught at backend requiring sanititzation, potential attack detected", this.id);
             }
 
             return new Note( this.id

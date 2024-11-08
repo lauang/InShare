@@ -1,5 +1,7 @@
 package no.bufferoverflow.inshare;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +23,8 @@ public class RegistrationController {
     /** Template for executing SQL queries against the database. */
     private final JdbcTemplate jdbcTemplate;
     private final PasswordEncoder encoder;
+
+    private final Logger logger = LoggerFactory.getLogger(RegistrationController.class);
 
     /**
      * Data Transfer Object (DTO) for capturing user registration details.
@@ -88,21 +92,25 @@ public class RegistrationController {
         String sql = "SELECT COUNT(*) FROM User WHERE username = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, registrationDto.username);
         if (count != null && count > 0) {
+            logger.error("attempted username: {}, message: unsuccessful registration, username already taken", registrationDto.username);
             return ResponseEntity.ok(new RegistrationResponse(false, "Username already taken!"));
         }
 
         // //Check username format ok
         if (!PasswordUtils.checkUsernameFormat(registrationDto.username)) {
+            logger.error("attempted username: {}, message: Illegal username format caught at backend", registrationDto.username);
             return ResponseEntity.ok(new RegistrationResponse(false, "Username must be between 6 and 20 characters long and contain only letters, numbers and underscores!"));
         }
 
         // Check password format ok
         if(!PasswordUtils.checkPasswordFormat(registrationDto.password)) {
+            logger.error("attempted usernam: {}, message: Illegal password format caught at backend", registrationDto.username);
             return ResponseEntity.ok(new RegistrationResponse(false, "Password must be at least 8 characters long and contain at least one uppercase letter, one number and one special character!"));
         }
 
         String hashedPassword = encoder.encode(registrationDto.password);
         (new User(registrationDto.username,hashedPassword)).save(jdbcTemplate);
+        logger.info("user: {}, message: Registered successfully", registrationDto.username);
         
         return ResponseEntity.ok(new RegistrationResponse(true, "Registration successful!"));
     }

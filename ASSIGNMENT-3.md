@@ -346,8 +346,8 @@ To improve these authentication related problems, I plan to hashing the password
 3. User tests to ensure passwords are correctly hashed and stored.
 4. Implement password and username validation in both backend and frontend.
 5. Check both password and username with regex-patterns, where:
-  - 5.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
-  - 5.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
+    - 5.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
+    - 5.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
 6. Write tests to verify that only compliant passwords are accepted. 
 
 

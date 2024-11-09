@@ -2,7 +2,6 @@ package no.bufferoverflow.inshare;
 
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -133,12 +132,6 @@ public final class User implements UserDetails, Comparable<User> {
     }
 
     
-
-   /**
-     * Returns the password for this user.
-     * 
-     * @return the password for this user.
-     */
     @Override
     public String getPassword() {
         return "{argon2}" + password;
@@ -166,6 +159,7 @@ public final class User implements UserDetails, Comparable<User> {
     public int compareTo(User other) {
         return this.id.compareTo(other.id);
     }
+
     @Override
     public int hashCode() {
         return id.hashCode();

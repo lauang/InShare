@@ -106,18 +106,7 @@ public class SQLiteConfig {
                     );
                 """);
 
-                //old access control list, disregard for now
-            jdbcTemplate.execute("""
-                CREATE TABLE IF NOT EXISTS NoteUserPermission (
-                    user TEXT NOT NULL,
-                    note TEXT NOT NULL,
-                    permission TEXT NOT NULL,
-                    PRIMARY KEY (user,note,permission),
-                    FOREIGN KEY (user) REFERENCES User(id) ON DELETE CASCADE,
-                    FOREIGN KEY (note) REFERENCES Note(id) ON DELETE CASCADE,
-                    FOREIGN KEY (permission) REFERENCES Permission(name) ON DELETE CASCADE
-                );
-                """);
+            logger.info("DB initizialized.");
         };
     }
 }

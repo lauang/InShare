@@ -21,7 +21,7 @@ import java.io.InputStream;
 /**
  * Represents a Note in the InShare application.
  * A Note is defined by an ID, name, creation timestamp, content,
- * and a set of permissions for various users.
+ * and a map of user roles.
  */
 public final class Note {
     public final UUID id;
@@ -58,6 +58,9 @@ public final class Note {
         READ, WRITE, DELETE
     }
 
+    /**
+     * Enum representing possible roles for a note.
+     */
     public static enum Role {
         OWNER, ADMINISTRATOR, EDITOR, READER
     }
@@ -108,6 +111,7 @@ public final class Note {
 
     /**
      * Returns a new Note with updated content.
+     * The content is sanitized using AntiSamy to prevent attacks, a warning is logged if content required sanitization.
      *
      * @param content The new content for the note.
      * @return A new Note instance with the updated content.
@@ -140,10 +144,10 @@ public final class Note {
     }
 
     /**
-     * Returns a new Note with the updated user permissions.
+     * Returns a new Note with the updated user roles.
      *
-     * @param userRoles The new map of user permissions.
-     * @return A new Note instance with the updated user permissions.
+     * @param userRoles The new map of user roles.
+     * @return A new Note instance with the updated user roles.
      */
     public Note withUserRoles(Map<UUID, Role> userRoles) {
         return new Note(this.id
@@ -155,11 +159,11 @@ public final class Note {
     }
     
     /**
-     * Returns a new Note with an additional permission for the specified user.
+     * Returns a new Note updating role for the specified user.
      *
-     * @param user The user to whom the permission is being added.
-     * @param permission The permission to be added.
-     * @return A new Note instance with the updated permissions for the user.
+     * @param user The user to whom the role is updated.
+     * @param permission The role.
+     * @return A new Note instance with the updated role for the user.
      */
     public Note withUserRole(User user, Role role) {
     
@@ -174,7 +178,7 @@ public final class Note {
     /**
      * Saves the note to the database.
      * Updates the note if it exists, or inserts it as new if it does not exist.
-     * The associated permissions are also saved to the database.
+     * The associated roles are also saved to the database.
      * Remember to call this transactionally, using @Transactional.
      *
      * @param jdbcTemplate The JdbcTemplate to interact with the database.

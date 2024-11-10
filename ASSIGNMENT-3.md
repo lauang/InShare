@@ -483,12 +483,14 @@ Security logging is important in software security to detect and respond to secu
 
 ### Planning
 
+There is very little logging in the inshare system. Logging is important to detect threats, trace them and respond to them.
+
 **Identfying the issues**
 
 Currently in Inshare the only logging is in `Note.java` and `SQLiteConfig.java`. The loggers in the two classes log the events; 'enabling foreign key support', 'load note' and 'load roles'. It is not wrong to log these events, but they are not critical and should not be in focus when there is else where no logging.
 
 **What should be logged (based on slides)**
-For extra context I have included some scenarios which will not be logged in the Inshare system, I denote these with (?). These scenarios are just examples of what could be logged to satisfy requirements from the slides, they are not important wrt. the inshare system and can be overlooked.
+For extra context I have included some scenarios which I will not be logging in the Inshare system, I denote these with (?). These scenarios are just examples of what could be logged to satisfy requirements from the slides, however, they are not critical wrt. the inshare system and will be overlooked.
 
 - Authentication events
   - Successful Logins: Log successful login events with the.
@@ -501,7 +503,7 @@ For extra context I have included some scenarios which will not be logged in the
   - Unauthorized Access Attempts: Log instances caught at backend. 
   - (?) Suspicious API Access: Record attempts at request tampering.
 - Violations of invariants
-  - Data consistency violations: ex, editor tries to delete a note (overlaps with *unauthorized acces atempts*).
+  - Data consistency violations: ex, editor tries to delete a note (in this case, related to *unauthorized access attempts*).
 - Unusual behaviour
   - (?) Abnormal frequency of notesharing.
 - (?) Performance statistics
@@ -514,15 +516,13 @@ For extra context I have included some scenarios which will not be logged in the
 
 **What are you recommendations for log monitoring and response for InShare?**
 
-If we wanted to deploy inshare in a realistic environment the current (and improved) logging mechanisms should undergo more improvent. Based on defined key security events we want to monitor, these should be logged to an external service where they could be stored (could be stored in the DB, but this would a be some what artifical solution), alternatively a cloud based solution which offers analysis tools. When alerts are then triggered by analysis in the cloud or by some self integrated analysis system, there should be some pre-defined routines for incident/threat detection response based on the type of alert.
+If we wanted to deploy inshare in a realistic environment the current (and improved) logging mechanisms should undergo more improvements. Based on defined key security events we want to monitor, these should be logged to an external service where they could be stored (could be stored in the DB, but this would be a some what artifical solution), alternatively a cloud based solution which offers analysis tools. When alerts are then triggered by analysis in the cloud or by some self-integrated analysis system, there should be some pre-defined routines for incident/threat detection response based on the type of alert.
 
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/29)
 
 ### Implementation
 
-Link to commits which implement logging.
-
-We chose to stick with the current logging system. Ideally the logging should be forwarded to an external service. In Inshare we used the `Logger` which logs it to the terminal. The logger provides some options and in our solution we have used `Info`, `Warn` and `Error` based on what type of event is being logged.
+We chose to stick with the current logging system, but increase the frequency of logging, and focus on security related events. Ideally the logging should be forwarded to an external service (as mentioend). In Inshare we used the `Logger` which logs it to the terminal. The logger provides some options, and in our solution we have used; `Info`, `Warn` and `Error` based on what type of event is being logged.
 
 **What we logged**
 
@@ -530,17 +530,21 @@ We chose to stick with the current logging system. Ideally the logging should be
 Logged with a helper method which logs the related user.id, the note.id and a message. Also takes a `boolean error` to log info or error
   - Successfull note actions, logged with `.info`
   - Unsuccessfull note actions, logged with `.error`
+[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/135e157ab4df502c30a28e6bcb61a0ae19c7be11)
 
 `AuthenticationLogger`
 A new EventListener class which listens for authentication related events. Logs events with the related user and the timestamp.
   - Successfull login, logged with `.info`
   - Failed login/bad credentials, logged with `.warn`
   - Log out, logged with `.info`
+[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/48ea379d559db97e429f3599a793aae69defe453)
 
 `Note`
 Logs some Note related actions and security breaches. The need for content sanitization at backend might indicate an attempt at xss or sql injection.
   - Log backend sanitization, logged with `.warn`
   - Kept former logging events
+[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
+[added back some logging which was commented out during usertest](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
 
 `RegistrationController`
 Log event related to (un)successfull registration events
@@ -548,6 +552,7 @@ Log event related to (un)successfull registration events
   - Illegal username caught at backend, logged with `.warn`
   - Illegal password caught at backend, logged with `.warn`
   - Unsuccessful due to taken username, logged with `.error`
+[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/f04db72362aa5be299d92b62acf04ed2ff5084f8)
 
 ### Review
 
@@ -560,8 +565,8 @@ Log event related to (un)successfull registration events
     - register
     - login
     - note actions, edit, share, read, delete
-  - tested sample actions legal and ilegal is logged. ex. backend sanitization is caught and logged, note actions are logged
+  - tested sample actions legal and ilegal is logged. ex. backend sanitization is caught and logged, note actions are logged. Backend sanitization can be a bit 'sensitve', logging when users type with 'enter'. I concluded however that this is not an issue. 
 
 
-Link to merge request with review.
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/8)
 

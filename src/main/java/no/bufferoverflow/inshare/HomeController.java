@@ -51,6 +51,7 @@ public class HomeController {
                 model.addAttribute("write", Note.Permission.WRITE);
                 model.addAttribute("delete", Note.Permission.DELETE);
                 
+                // role attributes
                 model.addAttribute("owner", Note.Role.OWNER);
                 model.addAttribute("editor", Note.Role.EDITOR);
                 model.addAttribute("admin", Note.Role.ADMINISTRATOR);

@@ -2,7 +2,6 @@ package no.bufferoverflow.inshare;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import io.vavr.collection.HashMap;
 import io.vavr.collection.HashSet;
-import java.util.List;
 import io.vavr.collection.Map;
 import io.vavr.collection.Set;
 import no.bufferoverflow.inshare.Note.Permission;
@@ -160,7 +158,7 @@ public class NoteController {
      */
     @DeleteMapping("/delete/{id}")
     @Transactional
-    public ResponseEntity<?> deleteNote(@PathVariable("id") UUID id) { //can be shortened with check permission method
+    public ResponseEntity<?> deleteNote(@PathVariable("id") UUID id) {
         if (checkPermission(id, Permission.DELETE)) {
             final String deleteNote = "DELETE FROM Note WHERE id = ?";
             jdbcTemplate.update(deleteNote, id.toString());
@@ -190,7 +188,7 @@ public class NoteController {
         model.addAttribute("isOwner", isOwner);
         
         if (checkRole(id, Note.Role.OWNER) || checkRole(id, Note.Role.ADMINISTRATOR)) {
-            logNoteAction(id, "Entered share form", isOwner);
+            logNoteAction(id, "Entered share form", false);
             return "shareNote";
         } else {
             logNoteAction(id, "Tried to enter share form without OWNER or ADMINISTRATOR role", true);
@@ -215,7 +213,7 @@ public class NoteController {
                 .get(user.id)
                 .getOrElse(HashSet.of());
         return HashMap.of("permissions", permissions.toJavaSet());
-    } //change to getNoteRole 
+    }
 
 
     /**
@@ -243,6 +241,7 @@ public class NoteController {
         if (user == null) {
             throw new UsernameNotFoundException("User not found: " + username);
         }
+
         //the issuer
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User issuer = (User) authentication.getPrincipal();
@@ -251,17 +250,17 @@ public class NoteController {
             return "redirect:/";
         }
 
-        // check role of the issuer
+        // check role of the issuer, only owner or administrator can share
         Note.Role issuerRole = note.userRoles.get(issuer.id).getOrElse(Note.Role.READER);
         if (!issuerRole.equals(Note.Role.OWNER) && !issuerRole.equals(Note.Role.ADMINISTRATOR)) {
             logNoteAction(noteId, "Tried to share without OWNER or ADMINISTRATOR role", true);
-            return "redirect:/"; //not allowed to share
+            return "redirect:/"; 
         }
 
         if (role.equals(Note.Role.OWNER)) { // only owner can transfer ownership
             if (issuerRole.equals(Note.Role.OWNER)) {
                 logNoteAction(noteId, "Transfered ownership", false);
-                note = note.withUserRole(issuer, Note.Role.ADMINISTRATOR); //revoke owner role
+                note = note.withUserRole(issuer, Note.Role.ADMINISTRATOR); //remove ownership
             } else {
                 logNoteAction(noteId, "Tried to transfer ownership without OWNER role", true);
                 return "redirect:/";
@@ -274,6 +273,7 @@ public class NoteController {
         return "redirect:/";
     }
 
+    /**Checks if the authenticated user has the given role*/
     private boolean checkRole(UUID noteId, Note.Role role) {
         final Authentication authentication
             = SecurityContextHolder.getContext()
@@ -287,7 +287,7 @@ public class NoteController {
         } else return false;
     }
 
-
+    /**Checks if the authenticated user has the given permission*/
     private boolean checkPermission(UUID noteId, Permission permission) {
         final Authentication authentication
             = SecurityContextHolder.getContext()
@@ -297,12 +297,12 @@ public class NoteController {
                 && authentication.isAuthenticated()
                 && (authentication.getPrincipal() instanceof User)) {
             final User user = (User)authentication.getPrincipal();
-            Note note = Note.load(jdbcTemplate, noteId);
             Map<UUID, Set<Permission>> permissions = Note.loadPermissions(jdbcTemplate, noteId);
             return permissions.get(user.id).getOrElse(HashSet.of()).contains(permission);
         } else return false;
     }
 
+    /**Utility helper method to log note actions*/
     private void logNoteAction(UUID noteId, String message, boolean error) {
         final Authentication authentication
             = SecurityContextHolder.getContext()

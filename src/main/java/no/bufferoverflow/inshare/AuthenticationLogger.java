@@ -28,7 +28,6 @@ public class AuthenticationLogger {
         User user = ((User) event.getAuthentication().getPrincipal());
         LocalDateTime timestamp = LocalDateTime.now();
 
-        // Log the successful login event
         logger.info("user: {}, timestamp: {}, message: logged in successfully", user.id, timestamp);
     }
 
@@ -42,7 +41,6 @@ public class AuthenticationLogger {
         User user = ((User) event.getAuthentication().getPrincipal());
         LocalDateTime timestamp = LocalDateTime.now();
 
-        // Log the logout event
         logger.info("user: {}, timestamp: {}, message: logged out", user.id, timestamp);
     }
 
@@ -56,7 +54,6 @@ public class AuthenticationLogger {
         String username = (String) event.getAuthentication().getPrincipal();
         LocalDateTime timestamp = LocalDateTime.now();
 
-        // Log the failed login event
         logger.warn("attempted username: {}, timeStamp: {}, message: Failed login attempt", username, timestamp);
     }
 }

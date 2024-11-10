@@ -12,8 +12,6 @@ import org.mockito.Mock;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import io.vavr.collection.Set;
-
 class UserTest {
 
     @Mock

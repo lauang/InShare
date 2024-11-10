@@ -299,6 +299,7 @@ There is 'a lot' that can be done with the inshare system, for example using htt
 
 ### Implementation
 
+**what was done and what problems did we encounter?**
 I first removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I encountered was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests (as mentioned before). I therefore changed this to a DELETE request and added the csrf token to the request.
 
 The GET request for edits could also be a potential vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit the form and a POST request with the new content. This POST request would be stopped if it was a csrf.

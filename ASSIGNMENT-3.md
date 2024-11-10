@@ -392,20 +392,22 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 
 ## Access Control Improvement (4 pts)
 
-Inshare has a flawed Access control model which violate privacy and can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
+Inshare has a flawed Access control model which with security flaws, which can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
 
 ### Planning
 
 **Identifying the issues**
 
-The current access control model uses a discreationary (to some degree) access control model, the author delegates who should have access to their resources. After the note is shared, any whom has now access to the note can share it further. This is flawed. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is related to the lack of backend permission checks.
+The current access control model uses an access control model list, which has it's limitations in options for different permissions, it's inefficient un practical. The author/creator of a resource (note) can choose whom to share it with, but once it's shared, the author has little control over it and it can be shared further. There are no  restrictions to who can give whom what permissions either. To summarize, the systemk has many flaws. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is also related to the lack of backend permission checks.
 
 **Solutions**
-Iteration 1: limit sharing to those with write access, perform backend permission checks.
+Introducing such a big change to the system, requires some understanding of how the system works and how the components work together. I therefore chose to split the problem into two parts, and first do small changes which would help me gain a better understanding of the system. 
+
+Iteration 1: limit sharing to those with write access, perform backend permission checks. Perform these backend checks with a helper method. Following OOP-principles this, this method should still work when the RBAC system is implemented.
+
 Iteration 2: introduce Role based access control, perform backend permission checks, fix flawed UI.
 
 **Issues IT1**
-
 - Limit share access to users with WRITE access
 - Ensure permission checks are handled at backend
 
@@ -425,6 +427,9 @@ Plan which methods on the backend have to include checks for permssions, and how
 Change the UI so that the sharing mechanism uses the new roles. Include an option to transfer ownership of a note.
 How will you determine that the security of the access control mechanism has improved?
 
+**My understanding of the taskdescription** 
+Editor and reader is pretty self-explainitory. Admin and owner can share. There can only be one owner. The owner can choose to transfer this ownership, but this means they loose their role as an owner.
+
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/9)
 
 ### Implementation
@@ -437,19 +442,19 @@ __done:__
 
 - share button removed from from users who does not have write access
 - Permissionchecks for all backend notecontroller actions
-- in share method only approved permissions will now be appended to user-note-permissions
 
 **RBAC model**
 
-- Impl. RBAC in DB -> `SQLiteConfig.java`.
-- remove old structure in DB -> `SQLiteConfig.java`.
-- update UI
-- update backend to adapt to new roles.
-- enforce backend permission checks on all actions
+- Impl. RBAC in DB -> `SQLiteConfig.java`. [link]()
+- remove old structure in DB -> `SQLiteConfig.java` (Doing later). [link]()
+- update UI [link]()
+- update backend to adapt to new roles. [link]()
+- enforce backend permission checks on all actions [link]()
 
 **implications**
 
 - the sample db is not compatible with the new stucture
+- Changing to a RBAC model is a significant change, which requires many changes accross many different files. It's easy to make a mistake. The changes themselves however was not that difficult once you undestand how the system is constructed. This is partly why i choose to limit sharing to users with write permission first, as a self-exercise.
 
 **Testing the security of AC model**
 

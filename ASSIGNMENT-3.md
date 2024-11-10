@@ -400,8 +400,10 @@ Inshare has a flawed Access control model which with security flaws, which can b
 
 The current access control model uses an access control model list, which has it's limitations in options for different permissions, it's inefficient un practical. The author/creator of a resource (note) can choose whom to share it with, but once it's shared, the author has little control over it and it can be shared further. There are no  restrictions to who can give whom what permissions either. To summarize, the systemk has many flaws. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is also related to the lack of backend permission checks.
 
-**Solutions**
-Introducing such a big change to the system, requires some understanding of how the system works and how the components work together. I therefore chose to split the problem into two parts, and first do small changes which would help me gain a better understanding of the system. 
+**Solution**
+Remodel the access control model to used a role based system, and ensure permission checks are handled at the backend.
+
+Introducing such a big change to the system, requires some understanding of how the system works and how the components work together. I therefore chose to split the problem into two parts, first do small changes which would help me gain a better understanding of the system. 
 
 Iteration 1: limit sharing to those with write access, perform backend permission checks. Perform these backend checks with a helper method. Following OOP-principles this, this method should still work when the RBAC system is implemented.
 
@@ -434,22 +436,19 @@ Editor and reader is pretty self-explainitory. Admin and owner can share. There 
 
 ### Implementation
 
-Describe any challenges you faced in the implementation.
-Link to commits which improve the access control system.
-
 **1st iteration (sharing is limited to write access)**
 __done:__
 
-- share button removed from from users who does not have write access
+- share button/option removed from from users who does not have write access
 - Permissionchecks for all backend notecontroller actions
 
 **RBAC model**
 
-- Impl. RBAC in DB -> `SQLiteConfig.java`. [link]()
-- remove old structure in DB -> `SQLiteConfig.java` (Doing later). [link]()
-- update UI [link]()
-- update backend to adapt to new roles. [link]()
-- enforce backend permission checks on all actions [link]()
+- Impl. RBAC in DB -> `SQLiteConfig.java`. [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/5a090a4d308a2a794af4a6e372c9ff5e7ca86649)
+- remove old structure in DB -> `SQLiteConfig.java` (Doing later). [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/b7238c292acdff43d4e8b72cc36216e9dac59eec)
+- update UI [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/c616da54af0dd5810bb9089abcf3b6419a0a0382)
+- update backend to adapt to new roles. [link Note](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/2b839d4ca5d84a2c101275e587f416af0ad72f99) [link User](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/7fe4988e0f1027dc1c9761b38c0ca1ff14cbeba5)
+- enforce backend permission checks on all actions [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/85299fdde828dd0f80b003265c6216ca7aca6f63) `::checkPermission` method (based on the already existing permission check in `::delete`) made in IT1 [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/3647f78819c93c58384cfde1adf211ef773ac7d8)
 
 **implications**
 
@@ -473,7 +472,7 @@ __done:__
 
 ### Review
 
-Link to merge request with review.
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/4)
 
 ## Logging System Improvement (1 pts)
 

@@ -283,12 +283,14 @@ The system contains __Cross Site Request Forgery__ vulnerabilities due to missin
 
 **Identifying the issues**
 
-There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implemented on requests. We know actions check for authentication but this can be exploited from an external site. Some of the requests use GET requests, this is not wrong but POST requests are generally safer with respect to csrf. Inspecting cookies reveals the httponly flag is enabled for the session token, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implemented on requests. We know actions check for authentication and permission but this can be exploited from an external site if a user were to click a link, which seemingly fools the system into thinking it was the user who made the request. Some of the requests use GET requests, this is not wrong in every context but POST requests are generally safer with respect to csrf. Delete note has been identified as especially vulnerable as it is a "state changing" action and it uses a GET requets. What i mean by state changing is that it directly introduces changes to the system when referenced. The show edit form (as an example) also uses GET request, however this only redirects the user to the edit form and to change the note there still has to be sent a POST request with the new content. Inspecting cookies reveals the httponly flag is enabled for the session token, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+
+There is 'a lot' that can be done with the inshare system, for example using https. The fix we introduced to the system however, is a lot simpler but it should mitigate the concerns of csrf vulnerabilites related to 'critical' note actions.
 
 **Issue summary**
 
 - Enable csrf tokens globally in `SecurityConfig.java`
-- Change action delete from a GET requet to a DELETE request.
+- Change action delete from a GET request to a DELETE request.
 - implement csrf tokens for requests.
 
 **CSRF issue (individual steps are split to child items):**
@@ -297,18 +299,19 @@ There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityC
 
 ### Implementation
 
-Describe any challenges you faced in the implementation.
-Link to commits which are part of the fix.
+I first removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I encountered was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests (as mentioned before). I therefore changed this to a DELETE request and added the csrf token to the request.
 
-I removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I faced was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests. I therefore changed this to a DELETE request and added the csrf token to the request.
+The GET request for edits could also be a potential vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit the form and a POST request with the new content. This POST request would be stopped if it was a csrf.
 
-The GET request for edits could also be considered a vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit it manually and a POST request with the new content would be sent. This POST request would be stopped if it was a csrf.
+**commits**
+
+- adapting the csrf settings [enable](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/5906bda67b77e73fd0b2e3907ffbfa7a521afb1a) [finally adapted correctly](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/eb9899a253a5bc23207cdf6cfc326ec81ea365f5)
+- Change delete action from a GET request to a DELETE request. [change to DELETE](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/baba111ba15f66b14e4de8f0c6b265e50b877ddd) [return a reponse](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/eb9899a253a5bc23207cdf6cfc326ec81ea365f5)
+- implement csrf tokens for request (the delete action DELETE request) [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/253c2343b984a5991e8460c60b5f7a6aca570d17) 
 
 ### Review
 
-Describe the steps you have taken to ensure that the issue is really fixed.
-
-**Testing the security of AC model**
+**Testing csrf**
 
 - Run Zap
   - analisys with Zap show no new security alerts related to the new code
@@ -326,7 +329,7 @@ Describe the steps you have taken to ensure that the issue is really fixed.
     - deleting (the correct way)
     - editing
 
-Link to merge request with review.
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/7)
 
 
 ## Authentication Improvement (3 pts)

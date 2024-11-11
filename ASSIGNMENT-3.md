@@ -176,7 +176,7 @@ Here you can document your work.
 
 Short description of the issue.
 
-One potential area for SQL-injection is in methods where SQL queries are constructed dynamically using string concatenation, such as the User.loadReadableNotes method. In this method, the username is directly concatenated into the SQL query without using parameterized queries, making it vulnerable to SQL injection.
+One potential area for SQL-injection is in methods where SQL queries are constructed dynamically using string concatenation, such as the `User.loadReadableNotes` method. In this method, the username is directly concatenated into the SQL query without using parameterized queries, making it vulnerable to SQL injection.
 
 ### Planning
 
@@ -184,12 +184,11 @@ Explain the mititgation techiniques for SQL injection which are planning to appl
 
 * Parameterized queries: This is the most effective way to prevent SQL injection. By using parameterized queries, we separate SQL code from user input, ensuring that input is treated strictly as data and cannot alter the structure of the query.
 
-* Input validation and sanitization: Properly validating user inputs helps reduce SQL injection risk. By validating data types, lengths, and formats can stop some simple attacks. For example, we could restrict usernames to alphanumeric characters only to prevent special characters (such as quotes or semicolons) that could be used in an injection attempt. For example, we could enforce a regex pattern like ^[a-zA-Z0-9]+$ to validate that usernames contain only letters and numbers.
+* Input validation and sanitization: Properly validating user inputs helps reduce SQL injection risk. By validating data types, lengths, and formats can stop some simple attacks. For example, we could restrict usernames to alphanumeric characters only to prevent special characters (such as quotes or semicolons) that could be used in an injection attempt. For example, we could enforce a regex pattern like ^[a-zA-Z0-9]+$ to validate that usernames contain only letters and numbers. We will fix this in [authentication](#authentication).
 
 * Least-privilege: The application database account should only have the necessary permissions for the required operations. For instance, if the account only needs read access for certain actions, we’ll restrict it from executing delete or update commands. This minimizes the risk if an SQL injection attempt is successful by limiting what the attacker could access or alter.
 
-Link to issue(s) created: 
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/1 
+[Link to issue(s) created](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/1) 
 
 ### Implementation
 
@@ -197,10 +196,9 @@ Describe any challenges you faced in the implementation.
 
 We needed to fix the query in `User.loadReadableNotes`, and make username a parameterized variable instead of just concatinating it. To do this, we simply change the query from `WHERE u.username = '""" + username + "' AND nup.permission = 'READ'` into `WHERE u.username = ? AND nup.permission = 'READ'`, and let the return statement take in an extra argument `username`. 
 
-Input validation is handled in authentication, and least-privilege is handled in access control. 
+Input validation is handled in [authentication](#authentication), and least-privilege is handled in [access control](#access-control). 
 
-Link to commits which are part of the fix. 
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3/diffs?commit_id=c73762b0c07de56bbcf0fb5f2e4de7d6d15aa43d
+[Link to commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3/diffs?commit_id=c73762b0c07de56bbcf0fb5f2e4de7d6d15aa43d)
 
 
 ### Review

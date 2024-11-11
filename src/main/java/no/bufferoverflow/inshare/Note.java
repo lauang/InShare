@@ -304,7 +304,13 @@ public final class Note {
 
             //log encountered errors
             if (cleanResults.getNumberOfErrors() > 0) {
-                cleanResults.getErrorMessages().forEach(e -> logger.warn("note: {}, message: illegal content sanitized, potential attempted attack, error: {}", this.id, e));
+                cleanResults.getErrorMessages().stream()
+                    .filter(e -> !e.contains("The p tag was empty"))
+                    .forEach(e -> logger.warn(
+                        "note: {}, message: illegal content sanitized, potential attempted attack, error: {}", 
+                        this.id, 
+                        e
+                    ));
             }
 
             return sanitizedContent;

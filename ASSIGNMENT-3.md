@@ -541,11 +541,13 @@ A new EventListener class which listens for authentication related events. Logs 
 [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/48ea379d559db97e429f3599a793aae69defe453)
 
 `Note`
-Logs some Note related actions and security breaches. The need for content sanitization at backend might indicate an attempt at xss or sql injection.
+Logs some Note related actions and security breaches. The need for content sanitization at backend might indicate an attempt at xss attack.
   - Log backend sanitization, logged with `.warn`
   - Kept former logging events
-[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
-[added back some logging which was commented out during usertest](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
+[initial logger (oversensitive)](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
+[new solution: check num errors](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/cebb1d60eb900725c8156100f920414a04cc1888)
+[(c2)new solution: exclude p tag error](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/31e07cf3b45b74be2d2f1decf56d6617747b3f02)
+[added back some logging which was commented out during user tests](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
 
 `RegistrationController`
 Log event related to (un)successfull registration events
@@ -566,8 +568,12 @@ Log event related to (un)successfull registration events
     - register
     - login
     - note actions, edit, share, read, delete
-  - tested sample actions legal and ilegal is logged. ex. backend sanitization is caught and logged, note actions are logged. Backend sanitization can be a bit 'sensitve', logging when users type with 'enter'. I concluded however that this is not an issue. 
+  - tested sample actions legal and ilegal is logged
+    - note actions
+    - passing scripts/ilegal note content (initial solution was oversensitive, decided to form a different approach to the problem, hence two merge requests)
+    - registration, successful and unsuccessful
+    - Authentication related events, in, out, bad creadentials
 
 
 [Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/8)
-
+[Ling to merge request for with improvements for sanitization logging](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/12)

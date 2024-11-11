@@ -79,7 +79,7 @@ public final class Note {
         this.name = name;
         this.author = author;
         this.created = created;
-        this.content = content;
+        this.content = sanitizedContent(content);
         this.userRoles = userRoles;
     }
 
@@ -117,30 +117,12 @@ public final class Note {
      * @return A new Note instance with the updated content.
      */
     public Note withContent(String content) {
-        try (InputStream policyStream = getClass().getClassLoader().getResourceAsStream("antisamy-slashdot.xml")) {
-            if (policyStream == null) {
-                throw new IllegalArgumentException("Policy file not found.");
-            }
-            Policy policy = Policy.getInstance(policyStream);
-            AntiSamy antiSamy = new AntiSamy();
-            CleanResults cleanResults = antiSamy.scan(content, policy);
-            String sanitizedContent = cleanResults.getCleanHTML();
-
-            if (!sanitizedContent.equals(content)) {
-                logger.warn("note: {}, message: illegal content caught at backend requiring sanititzation, potential attack detected", this.id);
-            }
-
             return new Note( this.id
                            , this.author
                            , this.name
                            , this.created
-                           , sanitizedContent
+                           , content
                            , this.userRoles);
-
-        } catch (PolicyException | ScanException | IOException e) {
-            logger.error("Error while sanitizing content: " + e.getMessage());
-            throw new RuntimeException("Failed to sanitize content", e);
-        }
     }
 
     /**
@@ -307,5 +289,28 @@ public final class Note {
         }
 
         return note;
+    }
+
+    // Sanitize content using AntiSamy-slashdot policy
+    private String sanitizedContent(String content) {
+        try (InputStream policyStream = getClass().getClassLoader().getResourceAsStream("antisamy-slashdot.xml")) {
+            if (policyStream == null) {
+                throw new IllegalArgumentException("Policy file not found.");
+            }
+            Policy policy = Policy.getInstance(policyStream);
+            AntiSamy antiSamy = new AntiSamy();
+            CleanResults cleanResults = antiSamy.scan(content, policy);
+            String sanitizedContent = cleanResults.getCleanHTML();
+
+            if (!sanitizedContent.equals(content)) {
+                logger.warn("note: {}, message: illegal content caught at backend requiring sanititzation, potential attack detected", this.id);
+            }
+
+            return sanitizedContent;
+
+        } catch (PolicyException | ScanException | IOException e) {
+            logger.error("Error while sanitizing content: " + e.getMessage());
+            throw new RuntimeException("Failed to sanitize content", e);
+        }
     }
 }

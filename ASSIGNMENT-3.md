@@ -216,8 +216,8 @@ Describe the steps you have taken to ensure that the issue is really fixed.
     (e.g. create and login as user `‘ OR ‘1’=’1`, and check that the desktop doesn't view all notes in the database).
   
 
-Link to merge request with review.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3
+[Link to merge request with review](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3).
+
 
 ## XSS Protection (3 pts)
 
@@ -239,18 +239,35 @@ First I'll configure AntiSamy using one of the standard policy files that matche
 
 When a note is created or updated, AntiSamy will scan and clean the content, based on the policy file. This ensures that the output only contains safe HTML, free from any script or XSS risks. After sanitization, the clean content will be returned as the content os the note.
 
-Link to issue(s) created.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/21
+[Link to issue(s) created](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/21).
+
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 
-The only challange I faced during the implementation was figuring out how to handle the AntiSamy policy file without downloading it directly into the project. Using an `InputStream` solved the problem by allowing the policy file to be streamed at runtime, simplifying the implementation and minimizing the need for file management. 
+The first challange I faced during the implementation was figuring out how to handle the AntiSamy policy file without downloading it directly into the project. Using an `InputStream` solved the problem by allowing the policy file to be streamed at runtime, simplifying the implementation and minimizing the need for file management.
+
+In the first version of the implementation, I sanitized the content in the `withContent` method. This seemed like a good solution, until we discovered that the `NoteController.createNote` method was not actually sanitizing the content. To fix this, we made the root constructor do the sanitization, since the methods `NoteController.createNote`, `NoteController.updateNote` and `Note.withContent` all will eventually use the root constructor. The [last commit](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/11/diffs?commit_id=22958f6a81cb547150e274be64e1ac436eb3cc35) shows which changes I made, and the script below was the test-script that found this exploit.
+
+```js
+const csrfToken = document.getElementById('xsrf-token').value;
+const noteContent = `<script>alert("xxs!");</script>`;
+const noteName = `xss`;
+async function xss() {
+    await fetch("/note/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", 'X-XSRF-TOKEN': csrfToken }, body: new URLSearchParams({
+      name: noteName,
+      content: noteContent, }),
+    });
+}
+xss();
+```
 
 Link to commits which are part of the fix.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id=1743a1ec78cc576e2f850ac2a945a0ec1658a73b
-
+- [First fix](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id=1743a1ec78cc576e2f850ac2a945a0ec1658a73b)
+- [Last fix](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/11/diffs?commit_id=22958f6a81cb547150e274be64e1ac436eb3cc35)
 
 ### Review
 
@@ -263,15 +280,16 @@ To ensure that the XSS vulnerability is effectively mitigated, I took the follow
 - Run SonarQube
   - Analisys with SonarQube shows no new security alerts related to the new code
 User tests:
-  - Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
+  - Made a unit test for the `Note` class to verify that it correctly sanitizes input.
   - I manually tested inserting XSS scripts (e.g. `<script>alert("XSS attack");</script>`) into note content to ensure that it doesn't execute. 
   - I have also manually tested that non-malicious note content are being preserved. 
   - I reviewed the AntiSamy Slashdot policy configuration to ensure it allows only safe tags and attributes for text formatting. 
-  - To handle cases where the policy file might be missing, I included error handling in the `withContent` method. 
+  - To handle cases where the policy file might be missing, I included error handling in the `Note.sanitizeContent` method. 
 
 
-Link to merge request with review.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6
+Link to merge requests with review.
+- [First merge request](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6)
+- [Final merge request](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/11)
 
 ## CSRF Protection (2 pts)
 

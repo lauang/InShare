@@ -302,8 +302,15 @@ public final class Note {
             CleanResults cleanResults = antiSamy.scan(content, policy);
             String sanitizedContent = cleanResults.getCleanHTML();
 
-            if (!sanitizedContent.equals(content)) {
-                logger.warn("note: {}, message: illegal content caught at backend requiring sanititzation, potential attack detected", this.id);
+            //log encountered errors
+            if (cleanResults.getNumberOfErrors() > 0) {
+                cleanResults.getErrorMessages().stream()
+                    .filter(e -> !e.contains("The p tag was empty"))
+                    .forEach(e -> logger.warn(
+                        "note: {}, message: illegal content sanitized, potential attempted attack, error: {}", 
+                        this.id, 
+                        e
+                    ));
             }
 
             return sanitizedContent;

@@ -233,7 +233,7 @@ To address this, we need a solution that sanitizes the content of notes before t
 
 Explain how you plan to mitigate the XSS vulnerability while keeping the formatting functionality.
 
-To migate the XSS vulnerability whle preserving formatting functionality, I plan to integrate OWASP AntiSamy into the note content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags while blocking any potentially harmful scripts.
+To migate the XSS vulnerability while preserving formatting functionality, I plan to integrate OWASP AntiSamy into the note content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags while blocking any potentially harmful scripts.
 
 First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `a`, `p`, `div`, `i`, `b`, `em`, `blockquote`, `tt`, `strong`, `br`, `ul`, `ol`, `li`.
 
@@ -364,7 +364,7 @@ To improve these authentication related problems, I plan to hashing the password
 5. Make the UI respond to the user, if username/password is not in desired patterns.
 6. Check both password and username with regex-patterns, where:
     - 6.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
-    - 6.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
+    - 6.2. Password shold be at leat 8 characters, containing at least one uppercase letter, one number and one special character.
 7. Write tests to verify that only compliant passwords are accepted. 
 
 

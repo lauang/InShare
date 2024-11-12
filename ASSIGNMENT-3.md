@@ -329,6 +329,7 @@ The GET request for edits could also be a potential vulnerability. However the b
     - sharing
     - deleting (the correct way)
     - editing
+- Website which tests csrf vulnerability on delete note, Credit: Kristian Elde (Student) [link](https://inshare-malicious-csrf.vercel.app/)
 
 [Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/7)
 

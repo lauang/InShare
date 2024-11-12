@@ -184,9 +184,11 @@ Explain the mititgation techiniques for SQL injection which are planning to appl
 
 * Parameterized queries: This is the most effective way to prevent SQL injection. By using parameterized queries, we separate SQL code from user input, ensuring that input is treated strictly as data and cannot alter the structure of the query.
 
-* Input validation and sanitization: Properly validating user inputs helps reduce SQL injection risk. By validating data types, lengths, and formats can stop some simple attacks. For example, we could restrict usernames to alphanumeric characters only to prevent special characters (such as quotes or semicolons) that could be used in an injection attempt. For example, we could enforce a regex pattern like ^[a-zA-Z0-9]+$ to validate that usernames contain only letters and numbers. We will fix this in [authentication](#authentication).
+* Input validation and sanitization: Properly validating user inputs helps reduce SQL injection risk. By validating data types, lengths, and formats can stop some simple attacks. For example, we could restrict usernames to alphanumeric characters only to prevent special characters (such as quotes or semicolons) that could be used in an injection attempt. For example, we could enforce a regex pattern like ^[a-zA-Z0-9]+$ to validate that usernames contain only letters and numbers.
 
 * Least-privilege: The application database account should only have the necessary permissions for the required operations. For instance, if the account only needs read access for certain actions, we’ll restrict it from executing delete or update commands. This minimizes the risk if an SQL injection attempt is successful by limiting what the attacker could access or alter.
+
+Input validation is handled in [authentication](#authentication), and least-privilege is handled in [access control](#access-control). 
 
 [Link to issue(s) created](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/1) 
 
@@ -195,8 +197,6 @@ Explain the mititgation techiniques for SQL injection which are planning to appl
 Describe any challenges you faced in the implementation.
 
 We needed to fix the query in `User.loadReadableNotes`, and make username a parameterized variable instead of just concatinating it. To do this, we simply change the query from `WHERE u.username = '""" + username + "' AND nup.permission = 'READ'` into `WHERE u.username = ? AND nup.permission = 'READ'`, and let the return statement take in an extra argument `username`. 
-
-Input validation is handled in [authentication](#authentication), and least-privilege is handled in [access control](#access-control). 
 
 [Link to commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3/diffs?commit_id=c73762b0c07de56bbcf0fb5f2e4de7d6d15aa43d)
 
@@ -233,7 +233,7 @@ To address this, we need a solution that sanitizes the content of notes before t
 
 Explain how you plan to mitigate the XSS vulnerability while keeping the formatting functionality.
 
-To migate the XSS vulnerability whle preserving formatting functionality, I plan to intefrate OWASP AntiSamy into the cote content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags, and blocking any potential harmful scripts.
+To migate the XSS vulnerability whle preserving formatting functionality, I plan to integrate OWASP AntiSamy into the note content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags while blocking any potentially harmful scripts.
 
 First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `a`, `p`, `div`, `i`, `b`, `em`, `blockquote`, `tt`, `strong`, `br`, `ul`, `ol`, `li`.
 
@@ -349,7 +349,7 @@ Link to merge request with review.
 
 Short description of the issue.
 
-The primary issue with the current authentication system in InShare, is the weakness around password storage and password strength requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced. By having restrictions on username, where it can only contain letters, numbers and underscores as well as a length check, where it should be between 6 and 20 characters, will secure the application even futher.
+The primary issue with the current authentication system in InShare, is the weakness around password storage and password strength requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced. By having restrictions on username, where it can only contain letters, numbers and underscores as well as a length check, where it should be between 6 and 20 characters, will secure the application even further.
 
 ### Planning
 
@@ -361,10 +361,11 @@ To improve these authentication related problems, I plan to hashing the password
 2. Update the code to hash passwords using Argon2 before storage.
 3. User tests to ensure passwords are correctly hashed and stored.
 4. Implement password and username validation in both backend and frontend.
-5. Check both password and username with regex-patterns, where:
-    - 5.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
-    - 5.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
-6. Write tests to verify that only compliant passwords are accepted. 
+5. Make the UI respond to the user, if username/password is not in desired patterns.
+6. Check both password and username with regex-patterns, where:
+    - 6.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
+    - 6.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
+7. Write tests to verify that only compliant passwords are accepted. 
 
 
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/8)
@@ -377,9 +378,11 @@ There was two challanges I faced during the implementation.
 
 1. Determining the correct regular expression to enforce password strenght requirements. It took some trial and error to ensure that the regex covered all necessary criteria (at least one uppercase letter, one digit and one special character).
 
-2. Implementing the `registration` method to correctly hash the password before storing it.
+2. Implementing the `RegistrationController.register` method to correctly hash the password before storing it and checking that the password and username both match the desired regex pattern. I did also check the regex pattern in frontend at `register.html`.
 
-[Link to commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/commits?commit_id=7e50b17d669b93b067213c30442ae288da79f9ec)
+[Link to all commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/commits?commit_id=7e50b17d669b93b067213c30442ae288da79f9ec)
+
+[Link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/diffs?commit_id=d3ab8dd9efb7fe20e50a6d68e050076d93cfc0a1#29cd62c615431abe87b2bfe94dceace08ea539b2) to the commit that fixed both forntend and backend regex pattern matching (and tests). 
 
 
 ### Review

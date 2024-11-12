@@ -30,7 +30,7 @@
 		<java.version>17</java.version>
 
 		<!-- > export SONAR_TOKEN =unique_user_token -->
-		<!-- > mvn clean verify sonar:sonar -P sonar -->
+		<!-- > mvn clean verify sonar:sonar -->
 		<sonar.host.url>http://localhost:9000</sonar.host.url>
 		<sonar.token>${env.SONAR_TOKEN}</sonar.token> 
 		<sonar.projectKey>inshare.project</sonar.projectKey>

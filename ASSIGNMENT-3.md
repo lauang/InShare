@@ -283,12 +283,14 @@ The system contains __Cross Site Request Forgery__ vulnerabilities due to missin
 
 **Identifying the issues**
 
-There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implemented on requests. We know actions check for authentication but this can be exploited from an external site. Some of the requests use GET requests, this is not wrong but POST requests are generally safer with respect to csrf. Inspecting cookies reveals the httponly flag is enabled for the session token, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityConfig.java`. This also means no tokens are implemented on requests. We know actions check for authentication and permission but this can be exploited from an external site if a user were to click a link, which seemingly fools the system into thinking it was the user who made the request. Some of the requests use GET requests, this is not wrong in every context but POST requests are generally safer with respect to csrf. Delete note has been identified as especially vulnerable as it is a "state changing" action and it uses a GET requets. What i mean by state changing is that it directly introduces changes to the system when referenced. The show edit form (as an example) also uses GET request, however this only redirects the user to the edit form and to change the note there still has to be sent a POST request with the new content. Inspecting cookies reveals the httponly flag is enabled for the session token, this is good but not sufficient protection alone. Samesite flag is set to "lax" this further limits the safety of GET requests. Secure flag is also disabled.
+
+There is 'a lot' that can be done with the inshare system, for example using https. The fix we introduced to the system however, is a lot simpler but it should mitigate the concerns of csrf vulnerabilites related to 'critical' note actions.
 
 **Issue summary**
 
 - Enable csrf tokens globally in `SecurityConfig.java`
-- Change action delete from a GET requet to a DELETE request.
+- Change action delete from a GET request to a DELETE request.
 - implement csrf tokens for requests.
 
 **CSRF issue (individual steps are split to child items):**
@@ -297,18 +299,20 @@ There is a vulnerability for csrf attacks. The tokens are disabled in `SecurityC
 
 ### Implementation
 
-Describe any challenges you faced in the implementation.
-Link to commits which are part of the fix.
+**what was done and what problems did we encounter?**
+I first removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I encountered was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests (as mentioned before). I therefore changed this to a DELETE request and added the csrf token to the request.
 
-I removed the .disable call on the csrf token. This enabled the token globally, but it "broke" the webpage. This problem was fixed by adding `CookieCsrfTokenRepository.withHttpOnlyFalse()`, to allows javascript. Another problem I faced was the registration site not working. This was related to the request expecting a token, but this token is not sent automatically with this request because the register form was not created with thymeleaf. I concluded that a csrf token was not necessary for the register form as this was a publicly available site. I therefore configured the token with `.ignoringRequestMatchers("/register")`. Another security vulnerability which was identified was the DELETE note action as a GET request. It is considered bad practice to use GET requests on "state changing" requests. I therefore changed this to a DELETE request and added the csrf token to the request.
+The GET request for edits could also be a potential vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit the form and a POST request with the new content. This POST request would be stopped if it was a csrf.
 
-The GET request for edits could also be considered a vulnerability. However the backend permission check for this request, makes it so users without write access are redirected back to the dashboard. And if this request was done with someone who has write permission, they would still need to edit it manually and a POST request with the new content would be sent. This POST request would be stopped if it was a csrf.
+**commits**
+
+- adapting the csrf settings [enable](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/5906bda67b77e73fd0b2e3907ffbfa7a521afb1a) [finally adapted correctly](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/eb9899a253a5bc23207cdf6cfc326ec81ea365f5)
+- Change delete action from a GET request to a DELETE request. [change to DELETE](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/baba111ba15f66b14e4de8f0c6b265e50b877ddd) [return a reponse](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/eb9899a253a5bc23207cdf6cfc326ec81ea365f5)
+- implement csrf tokens for request (the delete action DELETE request) [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/253c2343b984a5991e8460c60b5f7a6aca570d17) 
 
 ### Review
 
-Describe the steps you have taken to ensure that the issue is really fixed.
-
-**Testing the security of AC model**
+**Testing csrf**
 
 - Run Zap
   - analisys with Zap show no new security alerts related to the new code
@@ -325,8 +329,9 @@ Describe the steps you have taken to ensure that the issue is really fixed.
     - sharing
     - deleting (the correct way)
     - editing
+- Website which tests csrf vulnerability on delete note, Credit: Kristian Elde (Student) [link](https://inshare-malicious-csrf.vercel.app/)
 
-Link to merge request with review.
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/7)
 
 
 ## Authentication Improvement (3 pts)
@@ -392,20 +397,24 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 
 ## Access Control Improvement (4 pts)
 
-Inshare has a flawed Access control model which violate privacy and can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
+Inshare has a flawed and limited Access control model, which can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
 
 ### Planning
 
 **Identifying the issues**
 
-The current access control model uses a discreationary (to some degree) access control model, the author delegates who should have access to their resources. After the note is shared, any whom has now access to the note can share it further. This is flawed. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is related to the lack of backend permission checks.
+The current access control model uses an access control model list, which has it's limitations in options for different permissions, it's inefficient and not practical. The author/creator of a resource (note) can choose whom to share it with, but once it's shared, the author has little control over it and it can be shared further. There are no restrictions to who can give whom what permissions either. To summarize, the systemk has many flaws. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is also related to the lack of backend permission checks.
 
-**Solutions**
-Iteration 1: limit sharing to those with write access, perform backend permission checks.
+**Solution**
+Remodel the access control model to used a role based system, and ensure permission checks are handled at the backend.
+
+Introducing such a big change to the system, requires some understanding of how the system works and how the components work together. I therefore chose to split the problem into two parts, first do small changes which would help me gain a better understanding of the system. 
+
+Iteration 1: limit sharing to those with write access, perform backend permission checks. Perform these backend checks with a helper method. Following OOP-principles this, this method should still work when the RBAC system is implemented.
+
 Iteration 2: introduce Role based access control, perform backend permission checks, fix flawed UI.
 
 **Issues IT1**
-
 - Limit share access to users with WRITE access
 - Ensure permission checks are handled at backend
 
@@ -425,31 +434,31 @@ Plan which methods on the backend have to include checks for permssions, and how
 Change the UI so that the sharing mechanism uses the new roles. Include an option to transfer ownership of a note.
 How will you determine that the security of the access control mechanism has improved?
 
+**My understanding of the taskdescription** 
+Editor and reader is pretty self-explainitory. Admin and owner can share. There can only be one owner. The owner can choose to transfer this ownership, but this means they loose their role as an owner.
+
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/9)
 
 ### Implementation
 
-Describe any challenges you faced in the implementation.
-Link to commits which improve the access control system.
-
 **1st iteration (sharing is limited to write access)**
 __done:__
 
-- share button removed from from users who does not have write access
+- share button/option removed from from users who does not have write access
 - Permissionchecks for all backend notecontroller actions
-- in share method only approved permissions will now be appended to user-note-permissions
 
 **RBAC model**
 
-- Impl. RBAC in DB -> `SQLiteConfig.java`.
-- remove old structure in DB -> `SQLiteConfig.java`.
-- update UI
-- update backend to adapt to new roles.
-- enforce backend permission checks on all actions
+- Impl. RBAC in DB -> `SQLiteConfig.java`. [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/5a090a4d308a2a794af4a6e372c9ff5e7ca86649)
+- remove old structure in DB -> `SQLiteConfig.java` (Doing later). [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/b7238c292acdff43d4e8b72cc36216e9dac59eec)
+- update UI [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/c616da54af0dd5810bb9089abcf3b6419a0a0382)
+- update backend to adapt to new roles. [link Note](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/2b839d4ca5d84a2c101275e587f416af0ad72f99) [link User](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/7fe4988e0f1027dc1c9761b38c0ca1ff14cbeba5)
+- enforce backend permission checks on all actions [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/85299fdde828dd0f80b003265c6216ca7aca6f63) `::checkPermission` method (based on the already existing permission check in `::delete`) made in IT1 [link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/3647f78819c93c58384cfde1adf211ef773ac7d8)
 
 **implications**
 
 - the sample db is not compatible with the new stucture
+- Changing to a RBAC model is a significant change, which requires many changes accross many different files. It's easy to make a mistake. The changes themselves however was not that difficult once you undestand how the system is constructed. This is partly why i choose to limit sharing to users with write permission first, as a self-exercise.
 
 **Testing the security of AC model**
 
@@ -468,7 +477,7 @@ __done:__
 
 ### Review
 
-Link to merge request with review.
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/4)
 
 ## Logging System Improvement (1 pts)
 
@@ -476,12 +485,14 @@ Security logging is important in software security to detect and respond to secu
 
 ### Planning
 
+There is very little logging in the inshare system. Logging is important to detect threats, trace them and respond to them.
+
 **Identfying the issues**
 
 Currently in Inshare the only logging is in `Note.java` and `SQLiteConfig.java`. The loggers in the two classes log the events; 'enabling foreign key support', 'load note' and 'load roles'. It is not wrong to log these events, but they are not critical and should not be in focus when there is else where no logging.
 
 **What should be logged (based on slides)**
-For extra context I have included some scenarios which will not be logged in the Inshare system, I denote these with (?). These scenarios are just examples of what could be logged to satisfy requirements from the slides, they are not important wrt. the inshare system and can be overlooked.
+For extra context I have included some scenarios which I will not be logging in the Inshare system, I denote these with (?). These scenarios are just examples of what could be logged to satisfy requirements from the slides, however, they are not critical wrt. the inshare system and will be overlooked.
 
 - Authentication events
   - Successful Logins: Log successful login events with the.
@@ -494,7 +505,7 @@ For extra context I have included some scenarios which will not be logged in the
   - Unauthorized Access Attempts: Log instances caught at backend. 
   - (?) Suspicious API Access: Record attempts at request tampering.
 - Violations of invariants
-  - Data consistency violations: ex, editor tries to delete a note (overlaps with *unauthorized acces atempts*).
+  - Data consistency violations: ex, editor tries to delete a note (in this case, related to *unauthorized access attempts*).
 - Unusual behaviour
   - (?) Abnormal frequency of notesharing.
 - (?) Performance statistics
@@ -507,15 +518,13 @@ For extra context I have included some scenarios which will not be logged in the
 
 **What are you recommendations for log monitoring and response for InShare?**
 
-If we wanted to deploy inshare in a realistic environment the current (and improved) logging mechanisms should undergo more improvent. Based on defined key security events we want to monitor, these should be logged to an external service where they could be stored (could be stored in the DB, but this would a be some what artifical solution), alternatively a cloud based solution which offers analysis tools. When alerts are then triggered by analysis in the cloud or by some self integrated analysis system, there should be some pre-defined routines for incident/threat detection response based on the type of alert.
+If we wanted to deploy inshare in a realistic environment the current (and improved) logging mechanisms should undergo more improvements. Based on defined key security events we want to monitor, these should be logged to an external service where they could be stored (could be stored in the DB, but this would be a some what artifical solution), alternatively a cloud based solution which offers analysis tools. When alerts are then triggered by analysis in the cloud or by some self-integrated analysis system, there should be some pre-defined routines for incident/threat detection response based on the type of alert.
 
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/29)
 
 ### Implementation
 
-Link to commits which implement logging.
-
-We chose to stick with the current logging system. Ideally the logging should be forwarded to an external service. In Inshare we used the `Logger` which logs it to the terminal. The logger provides some options and in our solution we have used `Info`, `Warn` and `Error` based on what type of event is being logged.
+We chose to stick with the current logging system, but increase the frequency of logging, and focus on security related events. Ideally the logging should be forwarded to an external service (as mentioend). In Inshare we used the `Logger` which logs it to the terminal. The logger provides some options, and in our solution we have used; `Info`, `Warn` and `Error` based on what type of event is being logged.
 
 **What we logged**
 
@@ -523,17 +532,23 @@ We chose to stick with the current logging system. Ideally the logging should be
 Logged with a helper method which logs the related user.id, the note.id and a message. Also takes a `boolean error` to log info or error
   - Successfull note actions, logged with `.info`
   - Unsuccessfull note actions, logged with `.error`
+[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/135e157ab4df502c30a28e6bcb61a0ae19c7be11)
 
 `AuthenticationLogger`
 A new EventListener class which listens for authentication related events. Logs events with the related user and the timestamp.
   - Successfull login, logged with `.info`
   - Failed login/bad credentials, logged with `.warn`
   - Log out, logged with `.info`
+[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/48ea379d559db97e429f3599a793aae69defe453)
 
 `Note`
-Logs some Note related actions and security breaches. The need for content sanitization at backend might indicate an attempt at xss or sql injection.
+Logs some Note related actions and security breaches. The need for content sanitization at backend might indicate an attempt at xss attack.
   - Log backend sanitization, logged with `.warn`
   - Kept former logging events
+[initial logger (oversensitive)](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
+[new solution: check num errors](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/cebb1d60eb900725c8156100f920414a04cc1888)
+[(c2)new solution: exclude p tag error](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/31e07cf3b45b74be2d2f1decf56d6617747b3f02)
+[added back some logging which was commented out during user tests](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/783a2d7a6ce235996af6edeacc37add5285fc540)
 
 `RegistrationController`
 Log event related to (un)successfull registration events
@@ -541,6 +556,7 @@ Log event related to (un)successfull registration events
   - Illegal username caught at backend, logged with `.warn`
   - Illegal password caught at backend, logged with `.warn`
   - Unsuccessful due to taken username, logged with `.error`
+[link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/commit/f04db72362aa5be299d92b62acf04ed2ff5084f8)
 
 ### Review
 
@@ -553,8 +569,12 @@ Log event related to (un)successfull registration events
     - register
     - login
     - note actions, edit, share, read, delete
-  - tested sample actions legal and ilegal is logged. ex. backend sanitization is caught and logged, note actions are logged
+  - tested sample actions legal and ilegal is logged
+    - note actions
+    - passing scripts/ilegal note content (initial solution was oversensitive, decided to form a different approach to the problem, hence two merge requests)
+    - registration, successful and unsuccessful
+    - Authentication related events, in, out, bad creadentials
 
 
-Link to merge request with review.
-
+[Link to merge request with review.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/8)
+[Ling to merge request for with improvements for sanitization logging](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/12)

@@ -396,13 +396,13 @@ Describe the steps you have taken to ensure that the issue is really fixed.
 
 ## Access Control Improvement (4 pts)
 
-Inshare has a flawed Access control model which with security flaws, which can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
+Inshare has a flawed and limited Access control model, which can be exploited. There are also bugs which permit users to aquire permissions they don't have, and they can buypass permission checks to perform unauthorized actions due to a lack of backend permission checks.
 
 ### Planning
 
 **Identifying the issues**
 
-The current access control model uses an access control model list, which has it's limitations in options for different permissions, it's inefficient un practical. The author/creator of a resource (note) can choose whom to share it with, but once it's shared, the author has little control over it and it can be shared further. There are no  restrictions to who can give whom what permissions either. To summarize, the systemk has many flaws. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is also related to the lack of backend permission checks.
+The current access control model uses an access control model list, which has it's limitations in options for different permissions, it's inefficient and not practical. The author/creator of a resource (note) can choose whom to share it with, but once it's shared, the author has little control over it and it can be shared further. There are no restrictions to who can give whom what permissions either. To summarize, the systemk has many flaws. Only the DELETE action is properly checked at the backend and other actions rely on the UI which is a bad practice. The system also has insecure direct object refrences which can be exploited without permissions, this problem is also related to the lack of backend permission checks.
 
 **Solution**
 Remodel the access control model to used a role based system, and ensure permission checks are handled at the backend.

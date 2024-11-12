@@ -176,7 +176,7 @@ Here you can document your work.
 
 Short description of the issue.
 
-One potential area for SQL-injection is in methods where SQL queries are constructed dynamically using string concatenation, such as the User.loadReadableNotes method. In this method, the username is directly concatenated into the SQL query without using parameterized queries, making it vulnerable to SQL injection.
+One potential area for SQL-injection is in methods where SQL queries are constructed dynamically using string concatenation, such as the `User.loadReadableNotes` method. In this method, the username is directly concatenated into the SQL query without using parameterized queries, making it vulnerable to SQL injection.
 
 ### Planning
 
@@ -188,8 +188,9 @@ Explain the mititgation techiniques for SQL injection which are planning to appl
 
 * Least-privilege: The application database account should only have the necessary permissions for the required operations. For instance, if the account only needs read access for certain actions, we’ll restrict it from executing delete or update commands. This minimizes the risk if an SQL injection attempt is successful by limiting what the attacker could access or alter.
 
-Link to issue(s) created: 
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/1 
+Input validation is handled in [authentication](#authentication), and least-privilege is handled in [access control](#access-control). 
+
+[Link to issue(s) created](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/1) 
 
 ### Implementation
 
@@ -197,10 +198,7 @@ Describe any challenges you faced in the implementation.
 
 We needed to fix the query in `User.loadReadableNotes`, and make username a parameterized variable instead of just concatinating it. To do this, we simply change the query from `WHERE u.username = '""" + username + "' AND nup.permission = 'READ'` into `WHERE u.username = ? AND nup.permission = 'READ'`, and let the return statement take in an extra argument `username`. 
 
-Input validation is handled in authentication, and least-privilege is handled in access control. 
-
-Link to commits which are part of the fix. 
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3/diffs?commit_id=c73762b0c07de56bbcf0fb5f2e4de7d6d15aa43d
+[Link to commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3/diffs?commit_id=c73762b0c07de56bbcf0fb5f2e4de7d6d15aa43d)
 
 
 ### Review
@@ -218,8 +216,8 @@ Describe the steps you have taken to ensure that the issue is really fixed.
     (e.g. create and login as user `‘ OR ‘1’=’1`, and check that the desktop doesn't view all notes in the database).
   
 
-Link to merge request with review.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3
+[Link to merge request with review](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/3).
+
 
 ## XSS Protection (3 pts)
 
@@ -235,24 +233,41 @@ To address this, we need a solution that sanitizes the content of notes before t
 
 Explain how you plan to mitigate the XSS vulnerability while keeping the formatting functionality.
 
-To migate the XSS vulnerability whle preserving formatting functionality, I plan to intefrate OWASP AntiSamy into the cote content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags, and blocking any potential harmful scripts.
+To migate the XSS vulnerability while preserving formatting functionality, I plan to integrate OWASP AntiSamy into the note content processing workflow. The main goal is to sanitize all HTML content in notes, allowing safe and pre-approved tags while blocking any potentially harmful scripts.
 
 First I'll configure AntiSamy using one of the standard policy files that matches the functionality we need. Slashdot seemed to be the right policy for our use, since it only allows the following HTML tags, and no CSS: `a`, `p`, `div`, `i`, `b`, `em`, `blockquote`, `tt`, `strong`, `br`, `ul`, `ol`, `li`.
 
 When a note is created or updated, AntiSamy will scan and clean the content, based on the policy file. This ensures that the output only contains safe HTML, free from any script or XSS risks. After sanitization, the clean content will be returned as the content os the note.
 
-Link to issue(s) created.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/21
+[Link to issue(s) created](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/21).
+
 
 ### Implementation
 
 Describe any challenges you faced in the implementation.
 
-The only challange I faced during the implementation was figuring out how to handle the AntiSamy policy file without downloading it directly into the project. Using an `InputStream` solved the problem by allowing the policy file to be streamed at runtime, simplifying the implementation and minimizing the need for file management. 
+The first challange I faced during the implementation was figuring out how to handle the AntiSamy policy file without downloading it directly into the project. Using an `InputStream` solved the problem by allowing the policy file to be streamed at runtime, simplifying the implementation and minimizing the need for file management.
+
+In the first version of the implementation, I sanitized the content in the `withContent` method. This seemed like a good solution, until we discovered that the `NoteController.createNote` method was not actually sanitizing the content. To fix this, we made the root constructor do the sanitization, since the methods `NoteController.createNote`, `NoteController.updateNote` and `Note.withContent` all will eventually use the root constructor. The [last commit](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/11/diffs?commit_id=22958f6a81cb547150e274be64e1ac436eb3cc35) shows which changes I made, and the script below was the test-script that found this exploit.
+
+```js
+const csrfToken = document.getElementById('xsrf-token').value;
+const noteContent = `<script>alert("xxs!");</script>`;
+const noteName = `xss`;
+async function xss() {
+    await fetch("/note/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", 'X-XSRF-TOKEN': csrfToken }, body: new URLSearchParams({
+      name: noteName,
+      content: noteContent, }),
+    });
+}
+xss();
+```
 
 Link to commits which are part of the fix.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id=1743a1ec78cc576e2f850ac2a945a0ec1658a73b
-
+- [First fix](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6/diffs?commit_id=1743a1ec78cc576e2f850ac2a945a0ec1658a73b)
+- [Last fix](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/11/diffs?commit_id=22958f6a81cb547150e274be64e1ac436eb3cc35)
 
 ### Review
 
@@ -265,15 +280,16 @@ To ensure that the XSS vulnerability is effectively mitigated, I took the follow
 - Run SonarQube
   - Analisys with SonarQube shows no new security alerts related to the new code
 User tests:
-  - Made a unit test for the `withContent` method to verify that it correctly sanitizes input.
+  - Made a unit test for the `Note` class to verify that it correctly sanitizes input.
   - I manually tested inserting XSS scripts (e.g. `<script>alert("XSS attack");</script>`) into note content to ensure that it doesn't execute. 
   - I have also manually tested that non-malicious note content are being preserved. 
   - I reviewed the AntiSamy Slashdot policy configuration to ensure it allows only safe tags and attributes for text formatting. 
-  - To handle cases where the policy file might be missing, I included error handling in the `withContent` method. 
+  - To handle cases where the policy file might be missing, I included error handling in the `Note.sanitizeContent` method. 
 
 
-Link to merge request with review.
-https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6
+Link to merge requests with review.
+- [First merge request](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/6)
+- [Final merge request](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/11)
 
 ## CSRF Protection (2 pts)
 
@@ -338,7 +354,7 @@ The GET request for edits could also be a potential vulnerability. However the b
 
 Short description of the issue.
 
-The primary issue with the current authentication system in InShare, is the weakness around password storage and password strength requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced. By having restrictions on username, where it can only contain letters, numbers and underscores as well as a length check, where it should be between 6 and 20 characters, will secure the application even futher.
+The primary issue with the current authentication system in InShare, is the weakness around password storage and password strength requirements. Currently, passwords are stored without a key derivation function, which leaves them vulnerable to database attacks/leaks. There is also no requirement for password lengt or complexity, making it easier for users to choose weak passwords that can be easily guessed or brute-forced. By having restrictions on username, where it can only contain letters, numbers and underscores as well as a length check, where it should be between 6 and 20 characters, will secure the application even further.
 
 ### Planning
 
@@ -350,10 +366,11 @@ To improve these authentication related problems, I plan to hashing the password
 2. Update the code to hash passwords using Argon2 before storage.
 3. User tests to ensure passwords are correctly hashed and stored.
 4. Implement password and username validation in both backend and frontend.
-5. Check both password and username with regex-patterns, where:
-    - 5.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
-    - 5.2. Password shold be at leat 8 charaters, containing at leat one uppercase letter, one number and one special character.
-6. Write tests to verify that only compliant passwords are accepted. 
+5. Make the UI respond to the user, if username/password is not in desired patterns.
+6. Check both password and username with regex-patterns, where:
+    - 6.1. Username should be between 6 and 20 characters, where only letters, numbers and underscores are allowed.
+    - 6.2. Password shold be at leat 8 characters, containing at least one uppercase letter, one number and one special character.
+7. Write tests to verify that only compliant passwords are accepted. 
 
 
 [Link to issue(s) created.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/issues/8)
@@ -366,9 +383,11 @@ There was two challanges I faced during the implementation.
 
 1. Determining the correct regular expression to enforce password strenght requirements. It took some trial and error to ensure that the regex covered all necessary criteria (at least one uppercase letter, one digit and one special character).
 
-2. Implementing the `registration` method to correctly hash the password before storing it.
+2. Implementing the `RegistrationController.register` method to correctly hash the password before storing it and checking that the password and username both match the desired regex pattern. I did also check the regex pattern in frontend at `register.html`.
 
-[Link to commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/commits?commit_id=7e50b17d669b93b067213c30442ae288da79f9ec)
+[Link to all commits which are part of the fix.](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/commits?commit_id=7e50b17d669b93b067213c30442ae288da79f9ec)
+
+[Link](https://git.app.uib.no/Mathias.H.Ness/inshare/-/merge_requests/2/diffs?commit_id=d3ab8dd9efb7fe20e50a6d68e050076d93cfc0a1#29cd62c615431abe87b2bfe94dceace08ea539b2) to the commit that fixed both forntend and backend regex pattern matching (and tests). 
 
 
 ### Review

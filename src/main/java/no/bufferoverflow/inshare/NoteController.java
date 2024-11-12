@@ -237,9 +237,15 @@ public class NoteController {
         Note note = Note.load(jdbcTemplate, noteId);
         
         // Load the user
-        User user = (User)userDetailService.loadUserByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found: " + username);
+        User user;
+        try {
+            user = (User) userDetailService.loadUserByUsername(username);
+            if (user == null) {
+                throw new UsernameNotFoundException("User not found: " + username);
+            }
+        } catch (UsernameNotFoundException e) {
+            logNoteAction(noteId, "Tried to share note with non-existent user", true);
+            return "redirect:/";
         }
 
         //the issuer
